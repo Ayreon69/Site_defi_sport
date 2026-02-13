@@ -57,6 +57,18 @@ function getMetricValuesByPerson(data: CleanRow[], metricKey: MetricKey): Map<st
   return grouped;
 }
 
+function normalizeMetricKey(metric: string): MetricKey | null {
+  const key = metric as MetricKey;
+  return METRIC_MAP.has(key) ? key : null;
+}
+
+function getValuesForPersonMetric(data: CleanRow[], personne: string, metricKey: MetricKey): number[] {
+  return getRealisationRows(data)
+    .filter((row) => row.personne === personne && typeof row[metricKey] === "number")
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((row) => row[metricKey] as number);
+}
+
 function buildVariation(metricKey: MetricKey, person: string, from: { date: string; value: number }, to: { date: string; value: number }): StepVariation | null {
   const metric = METRIC_MAP.get(metricKey);
   if (!metric) return null;
@@ -187,4 +199,35 @@ export function getBestAndWorstByMetric(data: CleanRow[]): MetricProgressionSumm
       worst,
     };
   });
+}
+
+export function isTimeMetric(metrique: string): boolean {
+  const metricKey = normalizeMetricKey(metrique);
+  if (!metricKey) return false;
+  if (metricKey === "planche_sec" || metricKey === "superman_sec") return false;
+  return metricKey.endsWith("_sec");
+}
+
+export function getProgressionType(value: number, metrique: string): "positive" | "negative" | "neutral" {
+  if (value === 0) return "neutral";
+  if (isTimeMetric(metrique)) {
+    return value < 0 ? "positive" : "negative";
+  }
+  return value > 0 ? "positive" : "negative";
+}
+
+export function calculateTotalProgression(data: CleanRow[], personne: string, metrique: string): number {
+  const metricKey = normalizeMetricKey(metrique);
+  if (!metricKey) return 0;
+  const values = getValuesForPersonMetric(data, personne, metricKey);
+  if (values.length < 2) return 0;
+  return values[values.length - 1] - values[0];
+}
+
+export function calculateRecentProgression(data: CleanRow[], personne: string, metrique: string): number {
+  const metricKey = normalizeMetricKey(metrique);
+  if (!metricKey) return 0;
+  const values = getValuesForPersonMetric(data, personne, metricKey);
+  if (values.length < 2) return 0;
+  return values[values.length - 1] - values[values.length - 2];
 }

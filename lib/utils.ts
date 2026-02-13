@@ -13,7 +13,8 @@ export function formatMetric(value: number | null, unit: string): string {
     const totalSeconds = Math.round(value * 60);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return `${minutes} min ${seconds.toString().padStart(2, "0")} s`;
+    if (minutes <= 0) return `${seconds}s`;
+    return `${minutes}m${seconds.toString().padStart(2, "0")}`;
   }
   if (unit === "kg") return `${value.toFixed(1)} kg`;
   return `${value.toFixed(0)}`;

@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 
 import { MetricChart } from "@/components/metric-chart";
+import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { PeopleTable } from "@/components/people-table";
 import { filterRows, getPersonGage } from "@/lib/data";
-import { getBestAndWorstByMetric, type StepVariation } from "@/lib/challengeStats";
+import { calculateRecentProgression, calculateTotalProgression, getBestAndWorstByMetric, type StepVariation } from "@/lib/challengeStats";
 import { METRICS, type CleanRow, type DataType, type MetricKey } from "@/lib/types";
 import { formatMetric, formatMonth, toDisplayMetricValue } from "@/lib/utils";
 
@@ -60,6 +62,18 @@ export function DashboardClient({ rows, people }: Props) {
     [rows, from, to]
   );
 
+  const selectedRealScope = useMemo(
+    () =>
+      filterRows({
+        rows,
+        people: selectedPerson ? [selectedPerson] : [],
+        types: ["realisation"],
+        from: from || undefined,
+        to: to || undefined,
+      }),
+    [rows, selectedPerson, from, to]
+  );
+
   const progressionByMetric = useMemo(() => getBestAndWorstByMetric(challengeScope), [challengeScope]);
 
   const summaryRows = useMemo(() => {
@@ -105,9 +119,11 @@ export function DashboardClient({ rows, people }: Props) {
       return {
         metric,
         data: Array.from(grouped.values()).sort((a, b) => a.date.localeCompare(b.date)),
+        totalProgression: calculateTotalProgression(selectedRealScope, selectedPerson, metric.key),
+        recentProgression: calculateRecentProgression(selectedRealScope, selectedPerson, metric.key),
       };
     });
-  }, [filtered]);
+  }, [filtered, selectedRealScope, selectedPerson]);
 
   const toggleType = (type: DataType) => {
     setTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
@@ -214,11 +230,23 @@ export function DashboardClient({ rows, people }: Props) {
         <p className="text-sm text-muted">{selectedGage ?? "Aucun gage defini pour cet athlete."}</p>
       </section>
 
-      <section className="mb-6 grid gap-4 lg:grid-cols-2">
-        {charts.map(({ metric, data }) => (
-          <MetricChart key={metric.key as MetricKey} title={metric.label} unit={metric.unit} data={data} />
+      <motion.section
+        key={selectedPerson}
+        initial={{ opacity: 0.75, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="mb-6 grid gap-4 lg:grid-cols-2"
+      >
+        {charts.map(({ metric, data, totalProgression, recentProgression }) => (
+          <article key={metric.key as MetricKey} className="space-y-3">
+            <MetricChart title={metric.label} unit={metric.unit} data={data} />
+            <div className="mt-4 flex flex-col gap-2 md:flex-row">
+              <ProgressIndicator value={totalProgression} metric={metric.key} label="Depuis le debut" />
+              <ProgressIndicator value={recentProgression} metric={metric.key} label="Depuis le dernier test" />
+            </div>
+          </article>
         ))}
-      </section>
+      </motion.section>
 
       <PeopleTable rows={rows} />
     </main>
