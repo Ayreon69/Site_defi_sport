@@ -2,16 +2,32 @@
 
 import { useMemo, useState } from "react";
 
-import { METRICS, type CleanRow, type DataType, type MetricKey } from "@/lib/types";
-import { filterRows, getPersonGage } from "@/lib/data";
-import { formatMetric, toDisplayMetricValue } from "@/lib/utils";
 import { MetricChart } from "@/components/metric-chart";
 import { PeopleTable } from "@/components/people-table";
+import { filterRows, getPersonGage } from "@/lib/data";
+import { getBestAndWorstByMetric, type StepVariation } from "@/lib/challengeStats";
+import { METRICS, type CleanRow, type DataType, type MetricKey } from "@/lib/types";
+import { formatMetric, formatMonth, toDisplayMetricValue } from "@/lib/utils";
 
 type Props = {
   rows: CleanRow[];
   people: string[];
 };
+
+function formatVariationValue(variation: StepVariation | null): string {
+  if (!variation) return "-";
+  const fromDisplay = toDisplayMetricValue(variation.metricKey, variation.fromValue) ?? 0;
+  const toDisplay = toDisplayMetricValue(variation.metricKey, variation.toValue) ?? 0;
+  const rawTransitionDelta = toDisplay - fromDisplay;
+  const absoluteDisplay = Math.abs(rawTransitionDelta);
+  const sign = rawTransitionDelta >= 0 ? "+" : "-";
+  return `${sign}${formatMetric(absoluteDisplay, variation.unit)}`;
+}
+
+function formatVariationPeriod(variation: StepVariation | null): string {
+  if (!variation) return "Periode indisponible";
+  return `${formatMonth(variation.fromDate)} -> ${formatMonth(variation.toDate)}`;
+}
 
 export function DashboardClient({ rows, people }: Props) {
   const [selectedPerson, setSelectedPerson] = useState<string>(people[0] ?? "");
@@ -31,6 +47,20 @@ export function DashboardClient({ rows, people }: Props) {
       }),
     [rows, selectedPerson, types, from, to]
   );
+
+  const challengeScope = useMemo(
+    () =>
+      filterRows({
+        rows,
+        people: [],
+        types: ["realisation"],
+        from: from || undefined,
+        to: to || undefined,
+      }),
+    [rows, from, to]
+  );
+
+  const progressionByMetric = useMemo(() => getBestAndWorstByMetric(challengeScope), [challengeScope]);
 
   const summaryRows = useMemo(() => {
     return METRICS.map((metric) => {
@@ -119,6 +149,34 @@ export function DashboardClient({ rows, people }: Props) {
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="mb-6">
+        <div className="mb-3">
+          <h2 className="font-display text-xl font-semibold text-ink">Resume du Defi par epreuve</h2>
+          <p className="text-sm text-muted">Meilleure progression et pire regression sur les transitions mensuelles consecutives.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          {progressionByMetric.map((metricSummary) => (
+            <article key={metricSummary.metricKey} className="rounded-2xl bg-card p-5 shadow-lg">
+              <h3 className="mb-4 font-display text-lg font-semibold text-ink">{metricSummary.metricLabel}</h3>
+
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Meilleure progression</p>
+                <p className="mt-1 text-sm text-slate-800">{metricSummary.best?.personne ?? "Aucune donnee"}</p>
+                <p className="text-xl font-semibold text-emerald-700">{formatVariationValue(metricSummary.best)}</p>
+                <p className="text-xs text-slate-600">{formatVariationPeriod(metricSummary.best)}</p>
+              </div>
+
+              <div className="mt-3 rounded-xl border border-red-100 bg-red-50 p-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-red-700">Pire regression</p>
+                <p className="mt-1 text-sm text-slate-800">{metricSummary.worst?.personne ?? "Aucune donnee"}</p>
+                <p className="text-xl font-semibold text-red-700">{formatVariationValue(metricSummary.worst)}</p>
+                <p className="text-xs text-slate-600">{formatVariationPeriod(metricSummary.worst)}</p>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
