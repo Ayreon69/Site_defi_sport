@@ -12,11 +12,14 @@ const FORMULA_TEXT =
 export function FormulaTooltip({ title = "Formule de calcul" }: Props) {
   return (
     <div className="group relative inline-flex items-center">
-      <button type="button" className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600">
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/90 px-2.5 py-1.5 text-xs text-slate-600 shadow-soft transition hover:-translate-y-0.5 dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-300"
+      >
         <Info size={14} />
         <span>{title}</span>
       </button>
-      <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-80 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700 opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100">
+      <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-3 text-xs leading-relaxed text-slate-700 opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
         {FORMULA_TEXT}
       </div>
     </div>

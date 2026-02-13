@@ -40,7 +40,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-soft transition hover:-translate-y-0.5"
+      className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/90 px-3 py-2 text-xs font-medium text-slate-700 shadow-soft transition duration-300 hover:-translate-y-0.5 hover:scale-[1.01] dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
       aria-label="Changer le thème"
       title="Changer le thème"
     >

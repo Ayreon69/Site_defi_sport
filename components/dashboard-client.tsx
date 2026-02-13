@@ -140,8 +140,8 @@ export function DashboardClient({ rows, people }: Props) {
   return (
     <main className="container-shell py-8">
       <section className="mb-6 rounded-xl2 bg-card p-5 shadow-soft">
-        <h1 className="font-display text-2xl font-semibold">Sport Performance Dashboard</h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1 className="font-display text-3xl font-semibold tracking-tight">Sport Performance Dashboard</h1>
+        <p className="premium-subtitle mt-2 text-sm">
           Basculer entre la vue collective (groupe) et la vue personnelle (athlete selectionne).
         </p>
 
@@ -191,36 +191,42 @@ export function DashboardClient({ rows, people }: Props) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="space-y-6"
+            className="section-fade space-y-8"
           >
-            <section className="rounded-xl2 bg-card p-4 shadow-soft">
+            <section className="premium-card">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-xl font-semibold text-ink">Progression du Groupe</h2>
+                <h2 className="font-display text-2xl font-semibold text-ink">Progression du Groupe</h2>
                 <FormulaTooltip />
               </div>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
-                <motion.article initial={{ opacity: 0.6 }} animate={{ opacity: 1 }} className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                <motion.article initial={{ opacity: 0.6 }} animate={{ opacity: 1 }} className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
                   <p className="text-xs uppercase tracking-wide text-emerald-700">Progressions positives recentes</p>
-                  <p className="mt-2 font-display text-3xl font-semibold text-emerald-700">{groupKpis.positiveRecentCount}</p>
+                  <motion.p key={groupKpis.positiveRecentCount} initial={{ opacity: 0.6, y: 3 }} animate={{ opacity: 1, y: 0 }} className="mt-2 font-display text-4xl font-semibold text-emerald-700">
+                    {groupKpis.positiveRecentCount}
+                  </motion.p>
                 </motion.article>
-                <motion.article initial={{ opacity: 0.6 }} animate={{ opacity: 1 }} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <motion.article initial={{ opacity: 0.6 }} animate={{ opacity: 1 }} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                   <p className="text-xs uppercase tracking-wide text-slate-700">Moyenne progression %</p>
-                  <p className="mt-2 font-display text-3xl font-semibold text-slate-700">{formatSignedPercent(groupKpis.averageProgressionPct)}</p>
+                  <motion.p key={groupKpis.averageProgressionPct} initial={{ opacity: 0.6, y: 3 }} animate={{ opacity: 1, y: 0 }} className="mt-2 font-display text-4xl font-semibold text-slate-700">
+                    {formatSignedPercent(groupKpis.averageProgressionPct)}
+                  </motion.p>
                 </motion.article>
-                <motion.article initial={{ opacity: 0.6 }} animate={{ opacity: 1 }} className="rounded-xl border border-teal-100 bg-teal-50 p-4">
+                <motion.article initial={{ opacity: 0.6 }} animate={{ opacity: 1 }} className="rounded-2xl border border-teal-100 bg-teal-50 p-5 shadow-sm">
                   <p className="text-xs uppercase tracking-wide text-teal-700">Objectifs atteints</p>
-                  <p className="mt-2 font-display text-3xl font-semibold text-teal-700">{groupKpis.goalsReached}</p>
+                  <motion.p key={groupKpis.goalsReached} initial={{ opacity: 0.6, y: 3 }} animate={{ opacity: 1, y: 0 }} className="mt-2 font-display text-4xl font-semibold text-teal-700">
+                    {groupKpis.goalsReached}
+                  </motion.p>
                 </motion.article>
               </div>
             </section>
 
             <EvolutionScoreChart title="Score moyen du groupe par mois" data={groupAverageSeries} />
 
-            <section className="rounded-xl2 bg-card p-4 shadow-soft">
-              <h3 className="font-display text-lg font-semibold text-ink">Cartes individuelles</h3>
+            <section className="premium-card">
+              <h3 className="font-display text-xl font-semibold text-ink">Cartes individuelles</h3>
               <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {personSummaries.map((person) => (
-                  <article key={person.personne} className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                  <article key={person.personne} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:scale-[1.01]">
                     <p className="font-display text-lg font-semibold">{person.personne}</p>
                     <p className="mt-1 text-sm text-muted">Score global: {formatSignedPercent(person.score)}</p>
                     <p className="text-sm text-muted">Variation recente: {formatSignedPercent(person.recentMomentum)}</p>
@@ -237,27 +243,33 @@ export function DashboardClient({ rows, people }: Props) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="space-y-6"
+            className="section-fade space-y-8"
           >
-            <section className="rounded-xl2 bg-card p-4 shadow-soft">
+            <section className="premium-card">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-xl font-semibold text-ink">Vue Personnelle</h2>
+                <h2 className="font-display text-2xl font-semibold text-ink">Vue Personnelle</h2>
                 <FormulaTooltip />
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                   <p className="text-xs uppercase tracking-wide text-muted">Score evolution</p>
-                  <p className="mt-2 font-display text-3xl font-semibold">{formatSignedPercent(personalScore)}</p>
+                  <motion.p key={personalScore} initial={{ opacity: 0.6, y: 3 }} animate={{ opacity: 1, y: 0 }} className="mt-2 font-display text-4xl font-semibold">
+                    {formatSignedPercent(personalScore)}
+                  </motion.p>
                 </article>
-                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                   <p className="text-xs uppercase tracking-wide text-muted">Variation totale</p>
-                  <p className="mt-2 font-display text-3xl font-semibold">{formatSignedPercent(personalTotalVariation)}</p>
+                  <motion.p key={personalTotalVariation} initial={{ opacity: 0.6, y: 3 }} animate={{ opacity: 1, y: 0 }} className="mt-2 font-display text-4xl font-semibold">
+                    {formatSignedPercent(personalTotalVariation)}
+                  </motion.p>
                 </article>
-                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                   <p className="text-xs uppercase tracking-wide text-muted">Variation recente</p>
-                  <p className="mt-2 font-display text-3xl font-semibold">{formatSignedPercent(personalMomentum)}</p>
+                  <motion.p key={personalMomentum} initial={{ opacity: 0.6, y: 3 }} animate={{ opacity: 1, y: 0 }} className="mt-2 font-display text-4xl font-semibold">
+                    {formatSignedPercent(personalMomentum)}
+                  </motion.p>
                 </article>
-                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                   <p className="text-xs uppercase tracking-wide text-muted">Badge dynamique</p>
                   <span className={`mt-3 inline-block rounded-full px-2 py-1 text-xs font-medium ${badgeStyle(personalBadge)}`}>{personalBadge}</span>
                 </article>
@@ -266,7 +278,7 @@ export function DashboardClient({ rows, people }: Props) {
 
             <EvolutionScoreChart title="Evolution globale personnelle" data={personalEvolutionSeries} lineColor="#0ea5e9" />
 
-            <section className="rounded-xl2 bg-card p-4 shadow-soft">
+            <section className="premium-card">
               <h3 className="font-display text-lg font-semibold">Axes prioritaires d&apos;amelioration</h3>
               <div className="mt-3 flex flex-wrap gap-2">
                 {improvementZones.length ? (
@@ -281,7 +293,7 @@ export function DashboardClient({ rows, people }: Props) {
               </div>
             </section>
 
-            <section className="rounded-xl2 bg-card p-4 shadow-soft">
+            <section className="premium-card">
               <h3 className="font-display text-lg font-semibold">Gage</h3>
               <p className="mt-2 text-sm text-muted">{selectedGage ?? "Aucun gage defini pour cet athlete."}</p>
             </section>
