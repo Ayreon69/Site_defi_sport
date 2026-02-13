@@ -38,6 +38,12 @@ function getRowsByPerson(data: CleanRow[], personne: string): CleanRow[] {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+function getLatestRowByPerson(data: CleanRow[], personne: string): CleanRow | null {
+  const rows = getRowsByPerson(data, personne);
+  if (!rows.length) return null;
+  return rows[rows.length - 1];
+}
+
 function getMetricValues(rows: CleanRow[], metricKey: MetricKey): number[] {
   return rows.map((row) => row[metricKey]).filter((value): value is number => typeof value === "number");
 }
@@ -91,9 +97,32 @@ export function calculateGroupAverageScore(data: CleanRow[]): number {
 }
 
 export function calculateRecentMomentum(data: CleanRow[], personne: string): number {
-  const stats = listMetricStats(data, personne).filter((stat) => stat.recentPct !== null);
-  if (!stats.length) return 0;
-  const avg = stats.reduce((acc, stat) => acc + (stat.recentPct ?? 0), 0) / stats.length;
+  const rows = getRowsByPerson(data, personne);
+  const latestRow = getLatestRowByPerson(data, personne);
+  if (!rows.length || !latestRow) return 0;
+
+  const recentValues: number[] = [];
+
+  (METRICS.map((metric) => metric.key) as MetricKey[]).forEach((metricKey) => {
+    const metricMeta = METRIC_MAP.get(metricKey);
+    if (!metricMeta) return;
+
+    const latest = latestRow[metricKey];
+    if (typeof latest !== "number") return;
+
+    const previous = rows
+      .filter((row) => row.date < latestRow.date)
+      .map((row) => row[metricKey])
+      .filter((value): value is number => typeof value === "number")
+      .at(-1);
+
+    if (typeof previous !== "number") return;
+    const pct = progressionPct(previous, latest, Boolean(metricMeta.lowerIsBetter));
+    recentValues.push(pct);
+  });
+
+  if (!recentValues.length) return 0;
+  const avg = recentValues.reduce((acc, value) => acc + value, 0) / recentValues.length;
   return Number(avg.toFixed(1));
 }
 

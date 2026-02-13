@@ -1,9 +1,13 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 * {
@@ -13,9 +17,19 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: theme('backgroundImage.mesh');
-  color: theme('colors.ink');
-  font-family: theme('fontFamily.sans');
+  background: radial-gradient(circle at 20% 8%, #e0f2fe 0%, transparent 32%),
+    radial-gradient(circle at 80% 0%, #d1fae5 0%, transparent 30%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  color: theme("colors.ink");
+  font-family: theme("fontFamily.sans");
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+html.dark body {
+  background: radial-gradient(circle at 20% 8%, rgba(14, 165, 233, 0.16) 0%, transparent 34%),
+    radial-gradient(circle at 80% 0%, rgba(45, 212, 191, 0.15) 0%, transparent 32%),
+    linear-gradient(180deg, #090e17 0%, #0f172a 100%);
+  color: #e5e7eb;
 }
 
 a {
@@ -30,4 +44,48 @@ a {
 
 .kpi-card {
   @apply rounded-xl2 bg-card p-4 shadow-soft transition duration-300 hover:-translate-y-1;
+}
+
+html.dark .bg-card {
+  background-color: #0f172a !important;
+}
+
+html.dark .text-ink {
+  color: #f8fafc !important;
+}
+
+html.dark .text-muted {
+  color: #94a3b8 !important;
+}
+
+html.dark .bg-white {
+  background-color: #111827 !important;
+}
+
+html.dark .bg-slate-50 {
+  background-color: #111827 !important;
+}
+
+html.dark .bg-slate-100 {
+  background-color: #1f2937 !important;
+}
+
+html.dark .border-slate-50,
+html.dark .border-slate-100,
+html.dark .border-slate-200 {
+  border-color: #334155 !important;
+}
+
+html.dark .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-800 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .shadow-soft,
+html.dark .shadow-lg {
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.55) !important;
 }

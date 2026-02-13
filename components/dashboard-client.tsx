@@ -14,7 +14,6 @@ import {
   buildGroupAverageSeries,
   buildPersonEvolutionSeries,
   calculateGlobalEvolutionScore,
-  calculatePersonalRecentVariation,
   calculatePersonalTotalVariation,
   calculateRecentMomentum,
   detectImprovementZone,
@@ -96,10 +95,6 @@ export function DashboardClient({ rows, people }: Props) {
   );
   const personalTotalVariation = useMemo(
     () => (selectedPerson ? calculatePersonalTotalVariation(personalRealScope, selectedPerson) : 0),
-    [personalRealScope, selectedPerson]
-  );
-  const personalRecentVariation = useMemo(
-    () => (selectedPerson ? calculatePersonalRecentVariation(personalRealScope, selectedPerson) : 0),
     [personalRealScope, selectedPerson]
   );
   const personalMomentum = useMemo(
@@ -260,7 +255,7 @@ export function DashboardClient({ rows, people }: Props) {
                 </article>
                 <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs uppercase tracking-wide text-muted">Variation recente</p>
-                  <p className="mt-2 font-display text-3xl font-semibold">{formatSignedPercent(personalRecentVariation)}</p>
+                  <p className="mt-2 font-display text-3xl font-semibold">{formatSignedPercent(personalMomentum)}</p>
                 </article>
                 <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs uppercase tracking-wide text-muted">Badge dynamique</p>

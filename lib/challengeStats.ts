@@ -227,7 +227,21 @@ export function calculateTotalProgression(data: CleanRow[], personne: string, me
 export function calculateRecentProgression(data: CleanRow[], personne: string, metrique: string): number {
   const metricKey = normalizeMetricKey(metrique);
   if (!metricKey) return 0;
-  const values = getValuesForPersonMetric(data, personne, metricKey);
-  if (values.length < 2) return 0;
-  return values[values.length - 1] - values[values.length - 2];
+  const rows = getRealisationRows(data)
+    .filter((row) => row.personne === personne)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  if (!rows.length) return 0;
+
+  const latestRow = rows[rows.length - 1];
+  const latest = latestRow[metricKey];
+  if (typeof latest !== "number") return 0;
+
+  const previous = rows
+    .filter((row) => row.date < latestRow.date)
+    .map((row) => row[metricKey])
+    .filter((value): value is number => typeof value === "number")
+    .at(-1);
+
+  if (typeof previous !== "number") return 0;
+  return latest - previous;
 }
