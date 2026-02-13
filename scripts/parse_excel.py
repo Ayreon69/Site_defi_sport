@@ -31,7 +31,6 @@ HEADER_MAP = {
     "superman (min)": "superman_sec",
     "100 m (sec)": "sprint_100m_sec",
     "5 km (min)": "run_5km_sec",
-    "poids (kg)": "poids",
 }
 
 OUTPUT_COLUMNS = [
@@ -46,7 +45,6 @@ OUTPUT_COLUMNS = [
     "superman_sec",
     "sprint_100m_sec",
     "run_5km_sec",
-    "poids",
 ]
 
 
@@ -63,7 +61,6 @@ class CleanRow:
     superman_sec: float | None
     sprint_100m_sec: float | None
     run_5km_sec: float | None
-    poids: float | None
 
 
 @dataclass
@@ -218,7 +215,6 @@ def extract_sheet_rows(ws: Any, person_name: str) -> list[CleanRow]:
                     superman_sec=values["superman_sec"],
                     sprint_100m_sec=values["sprint_100m_sec"],
                     run_5km_sec=values["run_5km_sec"],
-                    poids=values["poids"],
                 )
             )
 

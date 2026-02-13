@@ -6,8 +6,7 @@
   | "planche_sec"
   | "superman_sec"
   | "sprint_100m_sec"
-  | "run_5km_sec"
-  | "poids";
+  | "run_5km_sec";
 
 export type DataType = "realisation" | "previsionnel";
 
@@ -23,7 +22,6 @@ export type CleanRow = {
   superman_sec: number | null;
   sprint_100m_sec: number | null;
   run_5km_sec: number | null;
-  poids: number | null;
 };
 
 export type PersonMeta = {
@@ -47,5 +45,4 @@ export const METRICS: MetricMeta[] = [
   { key: "superman_sec", label: "Superman", unit: "min" },
   { key: "sprint_100m_sec", label: "100m", unit: "sec", lowerIsBetter: true },
   { key: "run_5km_sec", label: "5km", unit: "min", lowerIsBetter: true },
-  { key: "poids", label: "Poids", unit: "kg" },
 ];

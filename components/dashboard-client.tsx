@@ -1,44 +1,68 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
 
+import { EvolutionScoreChart } from "@/components/evolution-score-chart";
+import { FormulaTooltip } from "@/components/formula-tooltip";
 import { MetricChart } from "@/components/metric-chart";
-import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { PeopleTable } from "@/components/people-table";
+import { ProgressIndicator } from "@/components/ProgressIndicator";
+import { calculateRecentProgression, calculateTotalProgression } from "@/lib/challengeStats";
 import { filterRows, getPersonGage } from "@/lib/data";
-import { calculateRecentProgression, calculateTotalProgression, getBestAndWorstByMetric, type StepVariation } from "@/lib/challengeStats";
+import {
+  buildGroupAverageSeries,
+  buildPersonEvolutionSeries,
+  calculateGlobalEvolutionScore,
+  calculatePersonalRecentVariation,
+  calculatePersonalTotalVariation,
+  calculateRecentMomentum,
+  detectImprovementZone,
+  getGroupKpis,
+  getPersonBadge,
+  listPersonSummaries,
+} from "@/lib/evolutionStats";
 import { METRICS, type CleanRow, type DataType, type MetricKey } from "@/lib/types";
-import { formatMetric, formatMonth, toDisplayMetricValue } from "@/lib/utils";
 
 type Props = {
   rows: CleanRow[];
   people: string[];
 };
 
-function formatVariationValue(variation: StepVariation | null): string {
-  if (!variation) return "-";
-  const fromDisplay = toDisplayMetricValue(variation.metricKey, variation.fromValue) ?? 0;
-  const toDisplay = toDisplayMetricValue(variation.metricKey, variation.toValue) ?? 0;
-  const rawTransitionDelta = toDisplay - fromDisplay;
-  const absoluteDisplay = Math.abs(rawTransitionDelta);
-  const sign = rawTransitionDelta >= 0 ? "+" : "-";
-  return `${sign}${formatMetric(absoluteDisplay, variation.unit)}`;
+function formatSignedPercent(value: number): string {
+  if (value > 0) return `+${value.toFixed(1)}%`;
+  if (value < 0) return `${value.toFixed(1)}%`;
+  return "0.0%";
 }
 
-function formatVariationPeriod(variation: StepVariation | null): string {
-  if (!variation) return "Periode indisponible";
-  return `${formatMonth(variation.fromDate)} -> ${formatMonth(variation.toDate)}`;
+function badgeStyle(badge: string): string {
+  if (badge === "Acceleration") return "bg-emerald-100 text-emerald-700";
+  if (badge === "Phase d'ajustement") return "bg-amber-100 text-amber-700";
+  return "bg-slate-100 text-slate-700";
 }
 
 export function DashboardClient({ rows, people }: Props) {
-  const [selectedPerson, setSelectedPerson] = useState<string>(people[0] ?? "");
+  const [selectedPerson, setSelectedPerson] = useState<string>("");
   const [types, setTypes] = useState<DataType[]>(["realisation", "previsionnel"]);
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
+
+  const showPersonalView = Boolean(selectedPerson);
   const selectedGage = selectedPerson ? getPersonGage(selectedPerson) : null;
 
-  const filtered = useMemo(
+  const groupScopedAll = useMemo(
+    () =>
+      filterRows({
+        rows,
+        people: [],
+        types: ["realisation", "previsionnel"],
+        from: from || undefined,
+        to: to || undefined,
+      }),
+    [rows, from, to]
+  );
+
+  const personalFiltered = useMemo(
     () =>
       filterRows({
         rows,
@@ -50,19 +74,7 @@ export function DashboardClient({ rows, people }: Props) {
     [rows, selectedPerson, types, from, to]
   );
 
-  const challengeScope = useMemo(
-    () =>
-      filterRows({
-        rows,
-        people: [],
-        types: ["realisation"],
-        from: from || undefined,
-        to: to || undefined,
-      }),
-    [rows, from, to]
-  );
-
-  const selectedRealScope = useMemo(
+  const personalRealScope = useMemo(
     () =>
       filterRows({
         rows,
@@ -74,56 +86,57 @@ export function DashboardClient({ rows, people }: Props) {
     [rows, selectedPerson, from, to]
   );
 
-  const progressionByMetric = useMemo(() => getBestAndWorstByMetric(challengeScope), [challengeScope]);
+  const groupKpis = useMemo(() => getGroupKpis(groupScopedAll), [groupScopedAll]);
+  const groupAverageSeries = useMemo(() => buildGroupAverageSeries(groupScopedAll), [groupScopedAll]);
+  const personSummaries = useMemo(() => listPersonSummaries(groupScopedAll), [groupScopedAll]);
 
-  const summaryRows = useMemo(() => {
-    return METRICS.map((metric) => {
-      const realValues = filtered
-        .filter((r) => r.type === "realisation" && r[metric.key] !== null)
-        .sort((a, b) => a.date.localeCompare(b.date));
-      const forecastValues = filtered
-        .filter((r) => r.type === "previsionnel" && r[metric.key] !== null)
-        .sort((a, b) => a.date.localeCompare(b.date));
-
-      const initialRaw = (realValues.at(0)?.[metric.key] as number | null | undefined) ?? null;
-      const latestRaw = (realValues.at(-1)?.[metric.key] as number | null | undefined) ?? null;
-      const objectiveRaw = (forecastValues.at(-1)?.[metric.key] as number | null | undefined) ?? null;
-
-      return {
-        key: metric.key,
-        label: metric.label,
-        unit: metric.unit,
-        initial: toDisplayMetricValue(metric.key, initialRaw),
-        latest: toDisplayMetricValue(metric.key, latestRaw),
-        objective: toDisplayMetricValue(metric.key, objectiveRaw),
-      };
-    });
-  }, [filtered]);
+  const personalScore = useMemo(
+    () => (selectedPerson ? calculateGlobalEvolutionScore(personalRealScope, selectedPerson) : 0),
+    [personalRealScope, selectedPerson]
+  );
+  const personalTotalVariation = useMemo(
+    () => (selectedPerson ? calculatePersonalTotalVariation(personalRealScope, selectedPerson) : 0),
+    [personalRealScope, selectedPerson]
+  );
+  const personalRecentVariation = useMemo(
+    () => (selectedPerson ? calculatePersonalRecentVariation(personalRealScope, selectedPerson) : 0),
+    [personalRealScope, selectedPerson]
+  );
+  const personalMomentum = useMemo(
+    () => (selectedPerson ? calculateRecentMomentum(personalRealScope, selectedPerson) : 0),
+    [personalRealScope, selectedPerson]
+  );
+  const personalBadge = useMemo(() => getPersonBadge(personalMomentum), [personalMomentum]);
+  const improvementZones = useMemo(
+    () => (selectedPerson ? detectImprovementZone(personalRealScope, selectedPerson) : []),
+    [personalRealScope, selectedPerson]
+  );
+  const personalEvolutionSeries = useMemo(
+    () => (selectedPerson ? buildPersonEvolutionSeries(personalRealScope, selectedPerson) : []),
+    [personalRealScope, selectedPerson]
+  );
 
   const charts = useMemo(() => {
     return METRICS.map((metric) => {
       const grouped = new Map<string, { date: string; realisation: number | null; previsionnel: number | null }>();
 
-      filtered.forEach((row) => {
+      personalFiltered.forEach((row) => {
         if (!grouped.has(row.date)) {
           grouped.set(row.date, { date: row.date, realisation: null, previsionnel: null });
         }
         const target = grouped.get(row.date);
         if (!target) return;
-        const rawValue = row[metric.key] as number | null;
-        const displayValue = toDisplayMetricValue(metric.key, rawValue);
-        if (row.type === "realisation") target.realisation = displayValue;
-        if (row.type === "previsionnel") target.previsionnel = displayValue;
+        const value = row[metric.key] as number | null;
+        if (row.type === "realisation") target.realisation = value;
+        if (row.type === "previsionnel") target.previsionnel = value;
       });
 
       return {
         metric,
         data: Array.from(grouped.values()).sort((a, b) => a.date.localeCompare(b.date)),
-        totalProgression: calculateTotalProgression(selectedRealScope, selectedPerson, metric.key),
-        recentProgression: calculateRecentProgression(selectedRealScope, selectedPerson, metric.key),
       };
     });
-  }, [filtered, selectedRealScope, selectedPerson]);
+  }, [personalFiltered]);
 
   const toggleType = (type: DataType) => {
     setTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
@@ -133,12 +146,15 @@ export function DashboardClient({ rows, people }: Props) {
     <main className="container-shell py-8">
       <section className="mb-6 rounded-xl2 bg-card p-5 shadow-soft">
         <h1 className="font-display text-2xl font-semibold">Sport Performance Dashboard</h1>
-        <p className="mt-1 text-sm text-muted">Vue par athlete avec synthese lisible et objectifs par exercice.</p>
+        <p className="mt-1 text-sm text-muted">
+          Basculer entre la vue collective (groupe) et la vue personnelle (athlete selectionne).
+        </p>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm">
-            <span className="mb-1 block text-muted">Athlete (selection unique)</span>
+            <span className="mb-1 block text-muted">Athlete</span>
             <select value={selectedPerson} onChange={(e) => setSelectedPerson(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2">
+              <option value="">Vue collective</option>
               {people.map((name) => (
                 <option key={name} value={name}>
                   {name}
@@ -154,101 +170,145 @@ export function DashboardClient({ rows, people }: Props) {
             <span className="mb-1 block text-muted">Fin</span>
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
           </label>
-          <div>
-            <span className="mb-1 block text-sm text-muted">Type</span>
-            <div className="flex gap-2">
-              <button onClick={() => toggleType("realisation")} className={`rounded-lg px-3 py-2 text-sm ${types.includes("realisation") ? "bg-accent text-white" : "bg-slate-100"}`}>
-                Realisation
-              </button>
-              <button onClick={() => toggleType("previsionnel")} className={`rounded-lg px-3 py-2 text-sm ${types.includes("previsionnel") ? "bg-accent text-white" : "bg-slate-100"}`}>
-                Previsionnel
-              </button>
+          {showPersonalView ? (
+            <div>
+              <span className="mb-1 block text-sm text-muted">Type</span>
+              <div className="flex gap-2">
+                <button onClick={() => toggleType("realisation")} className={`rounded-lg px-3 py-2 text-sm ${types.includes("realisation") ? "bg-accent text-white" : "bg-slate-100"}`}>
+                  Realisation
+                </button>
+                <button onClick={() => toggleType("previsionnel")} className={`rounded-lg px-3 py-2 text-sm ${types.includes("previsionnel") ? "bg-accent text-white" : "bg-slate-100"}`}>
+                  Previsionnel
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-muted">Mode groupe actif</div>
+          )}
         </div>
       </section>
 
-      <section className="mb-6">
-        <div className="mb-3">
-          <h2 className="font-display text-xl font-semibold text-ink">Resume du Defi par epreuve</h2>
-          <p className="text-sm text-muted">Meilleure progression et pire regression sur les transitions mensuelles consecutives.</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          {progressionByMetric.map((metricSummary) => (
-            <article key={metricSummary.metricKey} className="rounded-2xl bg-card p-5 shadow-lg">
-              <h3 className="mb-4 font-display text-lg font-semibold text-ink">{metricSummary.metricLabel}</h3>
-
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Meilleure progression</p>
-                <p className="mt-1 text-sm text-slate-800">{metricSummary.best?.personne ?? "Aucune donnee"}</p>
-                <p className="text-xl font-semibold text-emerald-700">{formatVariationValue(metricSummary.best)}</p>
-                <p className="text-xs text-slate-600">{formatVariationPeriod(metricSummary.best)}</p>
+      <AnimatePresence mode="wait">
+        {!showPersonalView ? (
+          <motion.section
+            key="collective"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="space-y-6"
+          >
+            <section className="rounded-xl2 bg-card p-4 shadow-soft">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-display text-xl font-semibold text-ink">Progression du Groupe</h2>
+                <FormulaTooltip />
               </div>
-
-              <div className="mt-3 rounded-xl border border-red-100 bg-red-50 p-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-red-700">Pire regression</p>
-                <p className="mt-1 text-sm text-slate-800">{metricSummary.worst?.personne ?? "Aucune donnee"}</p>
-                <p className="text-xl font-semibold text-red-700">{formatVariationValue(metricSummary.worst)}</p>
-                <p className="text-xs text-slate-600">{formatVariationPeriod(metricSummary.worst)}</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                <motion.article initial={{ opacity: 0.6 }} animate={{ opacity: 1 }} className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                  <p className="text-xs uppercase tracking-wide text-emerald-700">Progressions positives recentes</p>
+                  <p className="mt-2 font-display text-3xl font-semibold text-emerald-700">{groupKpis.positiveRecentCount}</p>
+                </motion.article>
+                <motion.article initial={{ opacity: 0.6 }} animate={{ opacity: 1 }} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs uppercase tracking-wide text-slate-700">Moyenne progression %</p>
+                  <p className="mt-2 font-display text-3xl font-semibold text-slate-700">{formatSignedPercent(groupKpis.averageProgressionPct)}</p>
+                </motion.article>
+                <motion.article initial={{ opacity: 0.6 }} animate={{ opacity: 1 }} className="rounded-xl border border-teal-100 bg-teal-50 p-4">
+                  <p className="text-xs uppercase tracking-wide text-teal-700">Objectifs atteints</p>
+                  <p className="mt-2 font-display text-3xl font-semibold text-teal-700">{groupKpis.goalsReached}</p>
+                </motion.article>
               </div>
-            </article>
-          ))}
-        </div>
-      </section>
+            </section>
 
-      <section className="mb-6 rounded-xl2 bg-card p-4 shadow-soft">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">Synthese des exercices</h2>
-          <span className="text-xs text-muted">Initial | Dernier resultat | Objectif</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-muted">
-                <th className="py-2 pr-4">Exercice</th>
-                <th className="py-2 pr-4">Initial</th>
-                <th className="py-2 pr-4">Dernier resultat</th>
-                <th className="py-2 pr-4">Objectif</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summaryRows.map((row) => (
-                <tr key={row.key} className="border-b border-slate-50 last:border-b-0">
-                  <td className="py-2 pr-4 font-medium text-ink">{row.label}</td>
-                  <td className="py-2 pr-4 text-slate-700">{formatMetric(row.initial, row.unit)}</td>
-                  <td className="py-2 pr-4 text-slate-700">{formatMetric(row.latest, row.unit)}</td>
-                  <td className="py-2 pr-4 text-slate-700">{formatMetric(row.objective, row.unit)}</td>
-                </tr>
+            <EvolutionScoreChart title="Score moyen du groupe par mois" data={groupAverageSeries} />
+
+            <section className="rounded-xl2 bg-card p-4 shadow-soft">
+              <h3 className="font-display text-lg font-semibold text-ink">Cartes individuelles</h3>
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {personSummaries.map((person) => (
+                  <article key={person.personne} className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                    <p className="font-display text-lg font-semibold">{person.personne}</p>
+                    <p className="mt-1 text-sm text-muted">Score global: {formatSignedPercent(person.score)}</p>
+                    <p className="text-sm text-muted">Variation recente: {formatSignedPercent(person.recentMomentum)}</p>
+                    <span className={`mt-3 inline-block rounded-full px-2 py-1 text-xs font-medium ${badgeStyle(person.badge)}`}>{person.badge}</span>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </motion.section>
+        ) : (
+          <motion.section
+            key="personal"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="space-y-6"
+          >
+            <section className="rounded-xl2 bg-card p-4 shadow-soft">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-display text-xl font-semibold text-ink">Vue Personnelle</h2>
+                <FormulaTooltip />
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted">Score evolution</p>
+                  <p className="mt-2 font-display text-3xl font-semibold">{formatSignedPercent(personalScore)}</p>
+                </article>
+                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted">Variation totale</p>
+                  <p className="mt-2 font-display text-3xl font-semibold">{formatSignedPercent(personalTotalVariation)}</p>
+                </article>
+                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted">Variation recente</p>
+                  <p className="mt-2 font-display text-3xl font-semibold">{formatSignedPercent(personalRecentVariation)}</p>
+                </article>
+                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted">Badge dynamique</p>
+                  <span className={`mt-3 inline-block rounded-full px-2 py-1 text-xs font-medium ${badgeStyle(personalBadge)}`}>{personalBadge}</span>
+                </article>
+              </div>
+            </section>
+
+            <EvolutionScoreChart title="Evolution globale personnelle" data={personalEvolutionSeries} lineColor="#0ea5e9" />
+
+            <section className="rounded-xl2 bg-card p-4 shadow-soft">
+              <h3 className="font-display text-lg font-semibold">Axes prioritaires d&apos;amelioration</h3>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {improvementZones.length ? (
+                  improvementZones.map((zone) => (
+                    <span key={zone} className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+                      {zone}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted">Aucun axe prioritaire detecte sur la periode.</span>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-xl2 bg-card p-4 shadow-soft">
+              <h3 className="font-display text-lg font-semibold">Gage</h3>
+              <p className="mt-2 text-sm text-muted">{selectedGage ?? "Aucun gage defini pour cet athlete."}</p>
+            </section>
+
+            <section className="grid gap-4 lg:grid-cols-2">
+              {charts.map(({ metric, data }) => (
+                <article key={metric.key as MetricKey} className="space-y-3">
+                  <MetricChart title={metric.label} unit={metric.unit} data={data} />
+                  <div className="flex flex-col gap-2 md:flex-row">
+                    <ProgressIndicator value={calculateTotalProgression(personalRealScope, selectedPerson, metric.key)} metric={metric.key} label="Depuis le debut" />
+                    <ProgressIndicator value={calculateRecentProgression(personalRealScope, selectedPerson, metric.key)} metric={metric.key} label="Depuis le dernier test" />
+                  </div>
+                </article>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </section>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      <section className="mt-6">
+        <PeopleTable rows={groupScopedAll.length ? groupScopedAll : rows} />
       </section>
-
-      <section className="mb-6 rounded-xl2 bg-card p-4 shadow-soft">
-        <h2 className="mb-2 font-display text-lg font-semibold">Gage</h2>
-        <p className="text-sm text-muted">{selectedGage ?? "Aucun gage defini pour cet athlete."}</p>
-      </section>
-
-      <motion.section
-        key={selectedPerson}
-        initial={{ opacity: 0.75, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        className="mb-6 grid gap-4 lg:grid-cols-2"
-      >
-        {charts.map(({ metric, data, totalProgression, recentProgression }) => (
-          <article key={metric.key as MetricKey} className="space-y-3">
-            <MetricChart title={metric.label} unit={metric.unit} data={data} />
-            <div className="mt-4 flex flex-col gap-2 md:flex-row">
-              <ProgressIndicator value={totalProgression} metric={metric.key} label="Depuis le debut" />
-              <ProgressIndicator value={recentProgression} metric={metric.key} label="Depuis le dernier test" />
-            </div>
-          </article>
-        ))}
-      </motion.section>
-
-      <PeopleTable rows={rows} />
     </main>
   );
 }

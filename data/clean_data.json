@@ -10,8 +10,7 @@
     "planche_sec": 140.0,
     "superman_sec": 78.0,
     "sprint_100m_sec": 15.8,
-    "run_5km_sec": 2700.0,
-    "poids": null
+    "run_5km_sec": 2700.0
   },
   {
     "personne": "Abdou",
@@ -24,8 +23,7 @@
     "planche_sec": 163.333,
     "superman_sec": 87.0,
     "sprint_100m_sec": 15.37,
-    "run_5km_sec": 2460.0,
-    "poids": null
+    "run_5km_sec": 2460.0
   },
   {
     "personne": "Abdou",
@@ -38,8 +36,7 @@
     "planche_sec": 186.667,
     "superman_sec": 96.0,
     "sprint_100m_sec": 14.93,
-    "run_5km_sec": 2220.0,
-    "poids": null
+    "run_5km_sec": 2220.0
   },
   {
     "personne": "Abdou",
@@ -52,8 +49,7 @@
     "planche_sec": 210.0,
     "superman_sec": 105.0,
     "sprint_100m_sec": 14.5,
-    "run_5km_sec": 1980.0,
-    "poids": null
+    "run_5km_sec": 1980.0
   },
   {
     "personne": "Abdou",
@@ -66,8 +62,7 @@
     "planche_sec": 140.0,
     "superman_sec": 78.0,
     "sprint_100m_sec": 15.8,
-    "run_5km_sec": 2700.0,
-    "poids": null
+    "run_5km_sec": 2700.0
   },
   {
     "personne": "Abdou",
@@ -80,8 +75,7 @@
     "planche_sec": 180.0,
     "superman_sec": 109.0,
     "sprint_100m_sec": 14.57,
-    "run_5km_sec": 1506.0,
-    "poids": 76.0
+    "run_5km_sec": 1506.0
   },
   {
     "personne": "Abdou",
@@ -94,8 +88,7 @@
     "planche_sec": null,
     "superman_sec": null,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Abdou",
@@ -108,8 +101,7 @@
     "planche_sec": 152.0,
     "superman_sec": 125.0,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Ali",
@@ -122,8 +114,7 @@
     "planche_sec": 189.0,
     "superman_sec": 65.0,
     "sprint_100m_sec": 13.47,
-    "run_5km_sec": 1630.0,
-    "poids": null
+    "run_5km_sec": 1630.0
   },
   {
     "personne": "Ali",
@@ -136,8 +127,7 @@
     "planche_sec": 206.0,
     "superman_sec": 73.333,
     "sprint_100m_sec": 13.31,
-    "run_5km_sec": 1536.667,
-    "poids": null
+    "run_5km_sec": 1536.667
   },
   {
     "personne": "Ali",
@@ -150,8 +140,7 @@
     "planche_sec": 223.0,
     "superman_sec": 81.667,
     "sprint_100m_sec": 13.16,
-    "run_5km_sec": 1443.333,
-    "poids": null
+    "run_5km_sec": 1443.333
   },
   {
     "personne": "Ali",
@@ -164,8 +153,7 @@
     "planche_sec": 240.0,
     "superman_sec": 90.0,
     "sprint_100m_sec": 13.0,
-    "run_5km_sec": 1350.0,
-    "poids": null
+    "run_5km_sec": 1350.0
   },
   {
     "personne": "Ali",
@@ -178,8 +166,7 @@
     "planche_sec": 189.0,
     "superman_sec": 65.0,
     "sprint_100m_sec": 13.47,
-    "run_5km_sec": 1630.0,
-    "poids": null
+    "run_5km_sec": 1630.0
   },
   {
     "personne": "Ali",
@@ -192,8 +179,7 @@
     "planche_sec": 240.0,
     "superman_sec": 71.0,
     "sprint_100m_sec": 12.88,
-    "run_5km_sec": 1320.0,
-    "poids": null
+    "run_5km_sec": 1320.0
   },
   {
     "personne": "Ali",
@@ -206,8 +192,7 @@
     "planche_sec": 250.0,
     "superman_sec": 90.0,
     "sprint_100m_sec": 13.17,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Ali",
@@ -220,8 +205,7 @@
     "planche_sec": 256.0,
     "superman_sec": 95.0,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Aylan",
@@ -234,8 +218,7 @@
     "planche_sec": 240.0,
     "superman_sec": 90.0,
     "sprint_100m_sec": 14.14,
-    "run_5km_sec": 2700.0,
-    "poids": null
+    "run_5km_sec": 2700.0
   },
   {
     "personne": "Aylan",
@@ -248,8 +231,7 @@
     "planche_sec": 250.0,
     "superman_sec": 95.0,
     "sprint_100m_sec": 14.09,
-    "run_5km_sec": 2320.0,
-    "poids": null
+    "run_5km_sec": 2320.0
   },
   {
     "personne": "Aylan",
@@ -262,8 +244,7 @@
     "planche_sec": 260.0,
     "superman_sec": 100.0,
     "sprint_100m_sec": 14.05,
-    "run_5km_sec": 1940.0,
-    "poids": null
+    "run_5km_sec": 1940.0
   },
   {
     "personne": "Aylan",
@@ -276,8 +257,7 @@
     "planche_sec": 270.0,
     "superman_sec": 105.0,
     "sprint_100m_sec": 14.0,
-    "run_5km_sec": 1560.0,
-    "poids": null
+    "run_5km_sec": 1560.0
   },
   {
     "personne": "Aylan",
@@ -290,8 +270,7 @@
     "planche_sec": 240.0,
     "superman_sec": 90.0,
     "sprint_100m_sec": 14.14,
-    "run_5km_sec": 2700.0,
-    "poids": null
+    "run_5km_sec": 2700.0
   },
   {
     "personne": "Aylan",
@@ -304,8 +283,7 @@
     "planche_sec": null,
     "superman_sec": null,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Aylan",
@@ -318,8 +296,7 @@
     "planche_sec": null,
     "superman_sec": null,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Aylan",
@@ -332,8 +309,7 @@
     "planche_sec": null,
     "superman_sec": null,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Fabien",
@@ -346,8 +322,7 @@
     "planche_sec": 242.0,
     "superman_sec": 105.0,
     "sprint_100m_sec": 14.49,
-    "run_5km_sec": 2700.0,
-    "poids": null
+    "run_5km_sec": 2700.0
   },
   {
     "personne": "Fabien",
@@ -360,8 +335,7 @@
     "planche_sec": 261.333,
     "superman_sec": 110.0,
     "sprint_100m_sec": 14.29,
-    "run_5km_sec": 2300.0,
-    "poids": null
+    "run_5km_sec": 2300.0
   },
   {
     "personne": "Fabien",
@@ -374,8 +348,7 @@
     "planche_sec": 280.667,
     "superman_sec": 115.0,
     "sprint_100m_sec": 14.1,
-    "run_5km_sec": 1900.0,
-    "poids": null
+    "run_5km_sec": 1900.0
   },
   {
     "personne": "Fabien",
@@ -388,8 +361,7 @@
     "planche_sec": 300.0,
     "superman_sec": 120.0,
     "sprint_100m_sec": 13.9,
-    "run_5km_sec": 1500.0,
-    "poids": null
+    "run_5km_sec": 1500.0
   },
   {
     "personne": "Fabien",
@@ -402,8 +374,7 @@
     "planche_sec": 242.0,
     "superman_sec": 105.0,
     "sprint_100m_sec": 14.49,
-    "run_5km_sec": 2700.0,
-    "poids": null
+    "run_5km_sec": 2700.0
   },
   {
     "personne": "Fabien",
@@ -416,8 +387,7 @@
     "planche_sec": null,
     "superman_sec": null,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Fabien",
@@ -430,8 +400,7 @@
     "planche_sec": null,
     "superman_sec": null,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Fabien",
@@ -444,8 +413,7 @@
     "planche_sec": null,
     "superman_sec": null,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Soulay",
@@ -458,8 +426,7 @@
     "planche_sec": 134.0,
     "superman_sec": 68.0,
     "sprint_100m_sec": 13.6,
-    "run_5km_sec": 1767.0,
-    "poids": null
+    "run_5km_sec": 1767.0
   },
   {
     "personne": "Soulay",
@@ -472,8 +439,7 @@
     "planche_sec": 169.333,
     "superman_sec": 78.667,
     "sprint_100m_sec": 13.4,
-    "run_5km_sec": 1628.0,
-    "poids": null
+    "run_5km_sec": 1628.0
   },
   {
     "personne": "Soulay",
@@ -486,8 +452,7 @@
     "planche_sec": 204.667,
     "superman_sec": 89.333,
     "sprint_100m_sec": 13.2,
-    "run_5km_sec": 1489.0,
-    "poids": null
+    "run_5km_sec": 1489.0
   },
   {
     "personne": "Soulay",
@@ -500,8 +465,7 @@
     "planche_sec": 240.0,
     "superman_sec": 100.0,
     "sprint_100m_sec": 13.0,
-    "run_5km_sec": 1350.0,
-    "poids": null
+    "run_5km_sec": 1350.0
   },
   {
     "personne": "Soulay",
@@ -514,8 +478,7 @@
     "planche_sec": 134.0,
     "superman_sec": 68.0,
     "sprint_100m_sec": 13.6,
-    "run_5km_sec": 1767.0,
-    "poids": 77.0
+    "run_5km_sec": 1767.0
   },
   {
     "personne": "Soulay",
@@ -528,8 +491,7 @@
     "planche_sec": 197.0,
     "superman_sec": 90.0,
     "sprint_100m_sec": 13.3,
-    "run_5km_sec": 1252.0,
-    "poids": 80.0
+    "run_5km_sec": 1252.0
   },
   {
     "personne": "Soulay",
@@ -542,8 +504,7 @@
     "planche_sec": 182.0,
     "superman_sec": 90.0,
     "sprint_100m_sec": 12.85,
-    "run_5km_sec": null,
-    "poids": 83.0
+    "run_5km_sec": null
   },
   {
     "personne": "Soulay",
@@ -556,8 +517,7 @@
     "planche_sec": 199.0,
     "superman_sec": 115.0,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Youcef",
@@ -570,8 +530,7 @@
     "planche_sec": 90.0,
     "superman_sec": 60.0,
     "sprint_100m_sec": 14.9,
-    "run_5km_sec": 1770.0,
-    "poids": null
+    "run_5km_sec": 1770.0
   },
   {
     "personne": "Youcef",
@@ -584,8 +543,7 @@
     "planche_sec": 110.0,
     "superman_sec": 70.0,
     "sprint_100m_sec": 14.57,
-    "run_5km_sec": 1710.0,
-    "poids": null
+    "run_5km_sec": 1710.0
   },
   {
     "personne": "Youcef",
@@ -598,8 +556,7 @@
     "planche_sec": 130.0,
     "superman_sec": 80.0,
     "sprint_100m_sec": 14.23,
-    "run_5km_sec": 1650.0,
-    "poids": null
+    "run_5km_sec": 1650.0
   },
   {
     "personne": "Youcef",
@@ -612,8 +569,7 @@
     "planche_sec": 150.0,
     "superman_sec": 90.0,
     "sprint_100m_sec": 13.9,
-    "run_5km_sec": 1590.0,
-    "poids": null
+    "run_5km_sec": 1590.0
   },
   {
     "personne": "Youcef",
@@ -626,8 +582,7 @@
     "planche_sec": 90.0,
     "superman_sec": 60.0,
     "sprint_100m_sec": 14.9,
-    "run_5km_sec": 1770.0,
-    "poids": 87.0
+    "run_5km_sec": 1770.0
   },
   {
     "personne": "Youcef",
@@ -640,8 +595,7 @@
     "planche_sec": 115.0,
     "superman_sec": 79.0,
     "sprint_100m_sec": 15.3,
-    "run_5km_sec": 1740.0,
-    "poids": 90.0
+    "run_5km_sec": 1740.0
   },
   {
     "personne": "Youcef",
@@ -654,8 +608,7 @@
     "planche_sec": 90.0,
     "superman_sec": 90.0,
     "sprint_100m_sec": 14.8,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   },
   {
     "personne": "Youcef",
@@ -668,7 +621,6 @@
     "planche_sec": 105.0,
     "superman_sec": 80.0,
     "sprint_100m_sec": null,
-    "run_5km_sec": null,
-    "poids": null
+    "run_5km_sec": null
   }
 ]

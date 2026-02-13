@@ -77,8 +77,8 @@ npm run start
 
 Format normalisé:
 
-| personne | date | type | dips | pompes | traction_pro | traction_sup | planche_sec | superman_sec | sprint_100m_sec | run_5km_sec | poids |
-|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| personne | date | type | dips | pompes | traction_pro | traction_sup | planche_sec | superman_sec | sprint_100m_sec | run_5km_sec |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
 
 - `date` convertie en `YYYY-MM-01`
 - formats de temps convertis en secondes
