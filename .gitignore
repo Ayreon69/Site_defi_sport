@@ -1,0 +1,22 @@
+﻿# dependencies
+/node_modules
+
+# next
+/.next
+/out
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/logs
+
+# local env files
+.env*.local
+
+# python
+__pycache__/
+*.pyc
+
+# misc
+.DS_Store

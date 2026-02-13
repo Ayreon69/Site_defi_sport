@@ -1,0 +1,26 @@
+[
+  {
+    "personne": "Abdou",
+    "gage": "Doit arrêter les boissons sucrées pendant 6 mois"
+  },
+  {
+    "personne": "Ali",
+    "gage": "Doit arrêter les boissons sucrées pendant 6 mois"
+  },
+  {
+    "personne": "Aylan",
+    "gage": null
+  },
+  {
+    "personne": "Fabien",
+    "gage": "Doit arrêter l'alcool pendant 6 mois"
+  },
+  {
+    "personne": "Soulay",
+    "gage": "Doit commencer à chercher une femme"
+  },
+  {
+    "personne": "Youcef",
+    "gage": "Doit apprendre 5 hizb du Coran sur 1 an"
+  }
+]
