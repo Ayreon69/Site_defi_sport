@@ -47,6 +47,8 @@ OUTPUT_COLUMNS = [
     "run_5km_sec",
 ]
 
+METRIC_FIELDS = [col for col in OUTPUT_COLUMNS if col not in {"personne", "date", "type"}]
+
 
 @dataclass
 class CleanRow:
@@ -234,6 +236,55 @@ def extract_gage(ws: Any) -> str | None:
     return None
 
 
+def align_first_previsionnel_with_first_realisation(rows: list[CleanRow]) -> None:
+    people = sorted({row.personne for row in rows})
+
+    for person in people:
+        person_rows = [row for row in rows if row.personne == person]
+        prevision_rows = sorted((row for row in person_rows if row.type == "previsionnel"), key=lambda r: r.date)
+        realisation_rows = sorted((row for row in person_rows if row.type == "realisation"), key=lambda r: r.date)
+
+        if not prevision_rows or not realisation_rows:
+            continue
+
+        first_prevision = prevision_rows[0]
+
+        for metric in METRIC_FIELDS:
+            first_real_value = next((getattr(row, metric) for row in realisation_rows if getattr(row, metric) is not None), None)
+            if first_real_value is None:
+                continue
+            setattr(first_prevision, metric, first_real_value)
+
+
+def drop_previsionnel_before_first_realisation(rows: list[CleanRow]) -> list[CleanRow]:
+    filtered: list[CleanRow] = []
+    people = sorted({row.personne for row in rows})
+
+    for person in people:
+        person_rows = [row for row in rows if row.personne == person]
+        realisation_rows = sorted((row for row in person_rows if row.type == "realisation"), key=lambda r: r.date)
+
+        first_real_date = next(
+            (
+                row.date
+                for row in realisation_rows
+                if any(getattr(row, metric) is not None for metric in METRIC_FIELDS)
+            ),
+            None,
+        )
+
+        if first_real_date is None:
+            filtered.extend(person_rows)
+            continue
+
+        for row in person_rows:
+            if row.type == "previsionnel" and row.date < first_real_date:
+                continue
+            filtered.append(row)
+
+    return filtered
+
+
 def write_outputs(rows: list[CleanRow], meta: list[PersonMeta], out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -272,6 +323,8 @@ def main() -> None:
         all_rows.extend(extract_sheet_rows(ws, sheet_name))
         people_meta.append(PersonMeta(personne=sheet_name, gage=extract_gage(ws)))
 
+    all_rows = drop_previsionnel_before_first_realisation(all_rows)
+    align_first_previsionnel_with_first_realisation(all_rows)
     all_rows.sort(key=lambda r: (r.personne.lower(), r.type, r.date))
     people_meta.sort(key=lambda p: p.personne.lower())
     write_outputs(all_rows, people_meta, Path("data"))

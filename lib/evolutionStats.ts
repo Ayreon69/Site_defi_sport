@@ -88,6 +88,13 @@ export function calculateGlobalEvolutionScore(data: CleanRow[], personne: string
   return Number(clamp(avg, -100, 100).toFixed(1));
 }
 
+function calculateGlobalEvolutionScoreNullable(data: CleanRow[], personne: string): number | null {
+  const stats = listMetricStats(data, personne);
+  if (!stats.length) return null;
+  const avg = stats.reduce((acc, stat) => acc + stat.progressPct, 0) / stats.length;
+  return Number(clamp(avg, -100, 100).toFixed(1));
+}
+
 export function calculateGroupAverageScore(data: CleanRow[]): number {
   const people = Array.from(new Set(getRealRows(data).map((row) => row.personne)));
   if (!people.length) return 0;
@@ -205,10 +212,13 @@ export function buildGroupAverageSeries(data: CleanRow[]): Array<{ date: string;
 
 export function buildPersonEvolutionSeries(data: CleanRow[], personne: string): Array<{ date: string; score: number }> {
   const dates = Array.from(new Set(getRowsByPerson(data, personne).map((row) => row.date))).sort((a, b) => a.localeCompare(b));
-  return dates.map((date) => {
+  return dates
+    .map((date) => {
     const scoped = data.filter((row) => row.personne === personne && row.date <= date);
-    return { date, score: calculateGlobalEvolutionScore(scoped, personne) };
-  });
+    const score = calculateGlobalEvolutionScoreNullable(scoped, personne);
+    return score === null ? null : { date, score };
+  })
+    .filter((point): point is { date: string; score: number } => point !== null);
 }
 
 export function calculatePersonalTotalVariation(data: CleanRow[], personne: string): number {

@@ -24,6 +24,7 @@ export default function PersonPage({ params }: { params: { name: string } }) {
 
   const stats = METRICS.map((metric) => {
     const values = realRows.map((r) => r[metric.key] as number | null);
+    const currentValue = values.filter((v): v is number => typeof v === "number").at(-1) ?? null;
     const progress = progressionPct(values, metric.lowerIsBetter);
     const projected = projectNextValue(realRows, metric.key as MetricKey);
     const personalBest = values.filter((v): v is number => typeof v === "number").reduce<number | null>((best, val) => {
@@ -34,7 +35,7 @@ export default function PersonPage({ params }: { params: { name: string } }) {
 
     return {
       ...metric,
-      current: (last?.[metric.key] as number | null) ?? null,
+      current: currentValue,
       progress,
       projected,
       personalBest,

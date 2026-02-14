@@ -22,6 +22,7 @@ import {
   listPersonSummaries,
 } from "@/lib/evolutionStats";
 import { METRICS, type CleanRow, type DataType, type MetricKey } from "@/lib/types";
+import { toDisplayMetricValue } from "@/lib/utils";
 
 type Props = {
   rows: CleanRow[];
@@ -121,14 +122,20 @@ export function DashboardClient({ rows, people }: Props) {
         }
         const target = grouped.get(row.date);
         if (!target) return;
-        const value = row[metric.key] as number | null;
+        const value = toDisplayMetricValue(metric.key, row[metric.key] as number | null);
         if (row.type === "realisation") target.realisation = value;
         if (row.type === "previsionnel") target.previsionnel = value;
       });
 
+      const sorted = Array.from(grouped.values()).sort((a, b) => a.date.localeCompare(b.date));
+      const firstRealIndex = sorted.findIndex((point) => point.realisation !== null);
+      const firstAnyIndex = sorted.findIndex((point) => point.realisation !== null || point.previsionnel !== null);
+      const firstNonEmptyIndex = firstRealIndex !== -1 ? firstRealIndex : firstAnyIndex;
+      const trimmedData = firstNonEmptyIndex === -1 ? [] : sorted.slice(firstNonEmptyIndex);
+
       return {
         metric,
-        data: Array.from(grouped.values()).sort((a, b) => a.date.localeCompare(b.date)),
+        data: trimmedData,
       };
     });
   }, [personalFiltered]);
