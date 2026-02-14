@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -20,7 +20,11 @@ export default function PersonPage({ params }: { params: { name: string } }) {
   if (!rows.length) notFound();
 
   const realRows = rows.filter((r) => r.type === "realisation").sort((a, b) => a.date.localeCompare(b.date));
-  const last = realRows.at(-1);
+  const lastMeasured =
+    realRows
+      .slice()
+      .reverse()
+      .find((row) => METRICS.some((metric) => typeof row[metric.key] === "number")) ?? null;
 
   const stats = METRICS.map((metric) => {
     const values = realRows.map((r) => r[metric.key] as number | null);
@@ -49,7 +53,7 @@ export default function PersonPage({ params }: { params: { name: string } }) {
         <div>
           <p className="text-sm text-muted">Fiche athlète</p>
           <h1 className="font-display text-3xl font-semibold">{name}</h1>
-          {last ? <p className="text-sm text-muted">Dernière mesure: {formatMonth(last.date)}</p> : null}
+          {lastMeasured ? <p className="text-sm text-muted">Dernière mesure: {formatMonth(lastMeasured.date)}</p> : null}
         </div>
         <Link href="/" className="rounded-lg bg-accent px-4 py-2 text-sm text-white">
           Retour dashboard

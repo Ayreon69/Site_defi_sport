@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --experimental-strip-types --test tests/**/*.test.ts && python -m unittest tests/test_parse_excel.py",
     "parse:data": "python scripts/parse_excel.py"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 import data from "@/data/clean_data.json";
 import peopleMeta from "@/data/people_meta.json";
-import type { CleanRow, DataType, MetricKey, PersonMeta } from "@/lib/types";
+import type { CleanRow, DataType, PersonMeta } from "@/lib/types";
 
 export function getAllRows(): CleanRow[] {
   return (data as CleanRow[]).slice().sort((a, b) => a.date.localeCompare(b.date));
@@ -35,14 +35,4 @@ export function filterRows(params: {
     const inTo = !to || row.date <= to;
     return inPeople && inTypes && inFrom && inTo;
   });
-}
-
-export function latestValue(rows: CleanRow[], metric: MetricKey): number | null {
-  const sorted = rows
-    .filter((r) => r[metric] !== null)
-    .slice()
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  if (!sorted.length) return null;
-  return sorted[sorted.length - 1][metric] as number;
 }

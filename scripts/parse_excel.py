@@ -1,11 +1,12 @@
 ﻿from __future__ import annotations
 
+import argparse
 import csv
 import glob
 import json
 import math
 import re
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from typing import Any
@@ -199,8 +200,6 @@ def extract_sheet_rows(ws: Any, person_name: str) -> list[CleanRow]:
                 cell_value = ws.cell(row=sheet_row, column=col).value
                 if target_field in {"planche_sec", "superman_sec", "run_5km_sec"}:
                     values[target_field] = parse_duration_to_seconds(cell_value)
-                elif target_field == "sprint_100m_sec":
-                    values[target_field] = parse_float(cell_value)
                 else:
                     values[target_field] = parse_float(cell_value)
 
@@ -308,12 +307,34 @@ def write_outputs(rows: list[CleanRow], meta: list[PersonMeta], out_dir: Path) -
         json.dump(meta_payload, fh, ensure_ascii=False, indent=2)
 
 
-def main() -> None:
-    candidates = glob.glob("*.xlsx")
-    if not candidates:
-        raise FileNotFoundError("Aucun fichier .xlsx trouvé à la racine du projet.")
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Parse un fichier Excel sport vers data/clean_data.{csv,json}.")
+    parser.add_argument("--file", type=str, help="Chemin du fichier .xlsx a parser (optionnel).")
+    return parser.parse_args()
 
-    workbook_path = candidates[0]
+
+def resolve_workbook_path(cli_file: str | None) -> str:
+    if cli_file:
+        path = Path(cli_file)
+        if not path.exists() or not path.is_file():
+            raise FileNotFoundError(f"Fichier introuvable: {cli_file}")
+        if path.suffix.lower() != ".xlsx":
+            raise ValueError(f"Le fichier doit etre un .xlsx: {cli_file}")
+        return str(path)
+
+    candidates = sorted(glob.glob("*.xlsx"))
+    if not candidates:
+        raise FileNotFoundError("Aucun fichier .xlsx trouve a la racine du projet.")
+    if len(candidates) > 1:
+        raise FileExistsError(
+            "Plusieurs fichiers .xlsx detectes. Utilise --file <nom_fichier.xlsx> pour choisir la source."
+        )
+    return candidates[0]
+
+
+def main() -> None:
+    args = parse_args()
+    workbook_path = resolve_workbook_path(args.file)
     wb = openpyxl.load_workbook(workbook_path, data_only=True)
 
     all_rows: list[CleanRow] = []
@@ -330,7 +351,7 @@ def main() -> None:
     write_outputs(all_rows, people_meta, Path("data"))
 
     print(f"Fichier source: {workbook_path}")
-    print(f"Lignes générées: {len(all_rows)}")
+    print(f"Lignes generees: {len(all_rows)}")
     print("Sortie: data/clean_data.csv + data/clean_data.json + data/people_meta.json")
 
 

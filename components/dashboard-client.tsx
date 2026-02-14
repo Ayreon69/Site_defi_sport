@@ -113,30 +113,46 @@ export function DashboardClient({ rows, people }: Props) {
   );
 
   const charts = useMemo(() => {
-    return METRICS.map((metric) => {
-      const grouped = new Map<string, { date: string; realisation: number | null; previsionnel: number | null }>();
+    const groupedByDate = new Map<
+      string,
+      {
+        realisation: Partial<Record<MetricKey, number | null>>;
+        previsionnel: Partial<Record<MetricKey, number | null>>;
+      }
+    >();
 
-      personalFiltered.forEach((row) => {
-        if (!grouped.has(row.date)) {
-          grouped.set(row.date, { date: row.date, realisation: null, previsionnel: null });
-        }
-        const target = grouped.get(row.date);
-        if (!target) return;
+    personalFiltered.forEach((row) => {
+      if (!groupedByDate.has(row.date)) {
+        groupedByDate.set(row.date, { realisation: {}, previsionnel: {} });
+      }
+      const bucket = groupedByDate.get(row.date);
+      if (!bucket) return;
+
+      METRICS.forEach((metric) => {
         const value = toDisplayMetricValue(metric.key, row[metric.key] as number | null);
-        if (row.type === "realisation") target.realisation = value;
-        if (row.type === "previsionnel") target.previsionnel = value;
+        if (row.type === "realisation") bucket.realisation[metric.key] = value;
+        if (row.type === "previsionnel") bucket.previsionnel[metric.key] = value;
+      });
+    });
+
+    const sortedDates = Array.from(groupedByDate.keys()).sort((a, b) => a.localeCompare(b));
+
+    return METRICS.map((metric) => {
+      const sorted = sortedDates.map((date) => {
+        const bucket = groupedByDate.get(date);
+        return {
+          date,
+          realisation: bucket?.realisation[metric.key] ?? null,
+          previsionnel: bucket?.previsionnel[metric.key] ?? null,
+        };
       });
 
-      const sorted = Array.from(grouped.values()).sort((a, b) => a.date.localeCompare(b.date));
       const firstRealIndex = sorted.findIndex((point) => point.realisation !== null);
       const firstAnyIndex = sorted.findIndex((point) => point.realisation !== null || point.previsionnel !== null);
       const firstNonEmptyIndex = firstRealIndex !== -1 ? firstRealIndex : firstAnyIndex;
       const trimmedData = firstNonEmptyIndex === -1 ? [] : sorted.slice(firstNonEmptyIndex);
 
-      return {
-        metric,
-        data: trimmedData,
-      };
+      return { metric, data: trimmedData };
     });
   }, [personalFiltered]);
 

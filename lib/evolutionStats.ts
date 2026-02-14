@@ -1,4 +1,4 @@
-import { METRICS, type CleanRow, type MetricKey } from "@/lib/types";
+﻿import { METRICS, type CleanRow, type MetricKey } from "@/lib/types";
 
 type MetricStat = {
   metricKey: MetricKey;
@@ -32,20 +32,41 @@ function getRealRows(data: CleanRow[]): CleanRow[] {
   return data.filter((row) => row.type === "realisation");
 }
 
+function buildRowsIndex(data: CleanRow[], type: "realisation" | "previsionnel"): Map<string, CleanRow[]> {
+  const index = new Map<string, CleanRow[]>();
+
+  data.forEach((row) => {
+    if (row.type !== type) return;
+    if (!index.has(row.personne)) index.set(row.personne, []);
+    index.get(row.personne)?.push(row);
+  });
+
+  index.forEach((rows, person) => {
+    index.set(
+      person,
+      rows.slice().sort((a, b) => a.date.localeCompare(b.date))
+    );
+  });
+
+  return index;
+}
+
 function getRowsByPerson(data: CleanRow[], personne: string): CleanRow[] {
   return getRealRows(data)
     .filter((row) => row.personne === personne)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-function getLatestRowByPerson(data: CleanRow[], personne: string): CleanRow | null {
-  const rows = getRowsByPerson(data, personne);
-  if (!rows.length) return null;
-  return rows[rows.length - 1];
-}
-
 function getMetricValues(rows: CleanRow[], metricKey: MetricKey): number[] {
   return rows.map((row) => row[metricKey]).filter((value): value is number => typeof value === "number");
+}
+
+function getLatestMetricValue(rows: CleanRow[], metricKey: MetricKey): number | null {
+  for (let i = rows.length - 1; i >= 0; i -= 1) {
+    const value = rows[i][metricKey];
+    if (typeof value === "number") return value;
+  }
+  return null;
 }
 
 function progressionPct(first: number, last: number, lowerIsBetter: boolean): number {
@@ -54,9 +75,7 @@ function progressionPct(first: number, last: number, lowerIsBetter: boolean): nu
   return lowerIsBetter ? -raw : raw;
 }
 
-function listMetricStats(data: CleanRow[], personne: string): MetricStat[] {
-  const rows = getRowsByPerson(data, personne);
-
+function listMetricStatsFromRows(rows: CleanRow[]): MetricStat[] {
   return (METRICS.map((metric) => metric.key) as MetricKey[])
     .map((metricKey) => {
       const metric = METRIC_MAP.get(metricKey);
@@ -81,33 +100,28 @@ function listMetricStats(data: CleanRow[], personne: string): MetricStat[] {
     .filter((item): item is MetricStat => item !== null);
 }
 
-export function calculateGlobalEvolutionScore(data: CleanRow[], personne: string): number {
-  const stats = listMetricStats(data, personne);
-  if (!stats.length) return 0;
-  const avg = stats.reduce((acc, stat) => acc + stat.progressPct, 0) / stats.length;
-  return Number(clamp(avg, -100, 100).toFixed(1));
-}
-
-function calculateGlobalEvolutionScoreNullable(data: CleanRow[], personne: string): number | null {
-  const stats = listMetricStats(data, personne);
+function calculateGlobalEvolutionScoreFromRows(rows: CleanRow[]): number | null {
+  const stats = listMetricStatsFromRows(rows);
   if (!stats.length) return null;
   const avg = stats.reduce((acc, stat) => acc + stat.progressPct, 0) / stats.length;
   return Number(clamp(avg, -100, 100).toFixed(1));
 }
 
-export function calculateGroupAverageScore(data: CleanRow[]): number {
-  const people = Array.from(new Set(getRealRows(data).map((row) => row.personne)));
-  if (!people.length) return 0;
-  const scores = people.map((person) => calculateGlobalEvolutionScore(data, person));
-  const avg = scores.reduce((acc, score) => acc + score, 0) / scores.length;
-  return Number(avg.toFixed(1));
+export function calculateGlobalEvolutionScore(data: CleanRow[], personne: string): number {
+  const rows = getRowsByPerson(data, personne);
+  const score = calculateGlobalEvolutionScoreFromRows(rows);
+  return score ?? 0;
 }
 
 export function calculateRecentMomentum(data: CleanRow[], personne: string): number {
   const rows = getRowsByPerson(data, personne);
-  const latestRow = getLatestRowByPerson(data, personne);
-  if (!rows.length || !latestRow) return 0;
+  return calculateRecentMomentumFromRows(rows);
+}
 
+function calculateRecentMomentumFromRows(rows: CleanRow[]): number {
+  if (!rows.length) return 0;
+
+  const latestRow = rows[rows.length - 1];
   const recentValues: number[] = [];
 
   (METRICS.map((metric) => metric.key) as MetricKey[]).forEach((metricKey) => {
@@ -117,13 +131,16 @@ export function calculateRecentMomentum(data: CleanRow[], personne: string): num
     const latest = latestRow[metricKey];
     if (typeof latest !== "number") return;
 
-    const previous = rows
-      .filter((row) => row.date < latestRow.date)
-      .map((row) => row[metricKey])
-      .filter((value): value is number => typeof value === "number")
-      .at(-1);
+    let previous: number | null = null;
+    for (let i = rows.length - 2; i >= 0; i -= 1) {
+      const value = rows[i][metricKey];
+      if (typeof value === "number") {
+        previous = value;
+        break;
+      }
+    }
 
-    if (typeof previous !== "number") return;
+    if (previous === null) return;
     const pct = progressionPct(previous, latest, Boolean(metricMeta.lowerIsBetter));
     recentValues.push(pct);
   });
@@ -134,7 +151,8 @@ export function calculateRecentMomentum(data: CleanRow[], personne: string): num
 }
 
 export function detectImprovementZone(data: CleanRow[], personne: string): string[] {
-  const stats = listMetricStats(data, personne)
+  const rows = getRowsByPerson(data, personne);
+  const stats = listMetricStatsFromRows(rows)
     .filter((stat) => stat.progressPct < 0)
     .sort((a, b) => a.progressPct - b.progressPct)
     .slice(0, 3);
@@ -149,40 +167,30 @@ export function getPersonBadge(momentum: number): "Acceleration" | "Stable" | "P
 }
 
 export function getGroupKpis(data: CleanRow[]): GroupKpis {
-  const realRows = getRealRows(data);
-  const people = Array.from(new Set(realRows.map((row) => row.personne)));
+  const realIndex = buildRowsIndex(data, "realisation");
+  const previsionIndex = buildRowsIndex(data, "previsionnel");
 
   let positiveRecentCount = 0;
-  let progressions: number[] = [];
+  const progressions: number[] = [];
   let goalsReached = 0;
 
-  people.forEach((personne) => {
-    const stats = listMetricStats(data, personne);
+  realIndex.forEach((realRowsPerson, personne) => {
+    const stats = listMetricStatsFromRows(realRowsPerson);
     stats.forEach((stat) => {
       progressions.push(stat.progressPct);
       if ((stat.recentPct ?? 0) > 0) positiveRecentCount += 1;
     });
 
-    const realByMetric = new Map<MetricKey, number>();
-    const previsionByMetric = new Map<MetricKey, number>();
-
-    const realRowsPerson = data
-      .filter((row) => row.personne === personne && row.type === "realisation")
-      .sort((a, b) => a.date.localeCompare(b.date));
-    const previsionRowsPerson = data
-      .filter((row) => row.personne === personne && row.type === "previsionnel")
-      .sort((a, b) => a.date.localeCompare(b.date));
+    const previsionRowsPerson = previsionIndex.get(personne) ?? [];
 
     (METRICS.map((metric) => metric.key) as MetricKey[]).forEach((metricKey) => {
       const metric = METRIC_MAP.get(metricKey);
       if (!metric) return;
 
-      const latestReal = realRowsPerson.map((row) => row[metricKey]).filter((v): v is number => typeof v === "number").at(-1);
-      const target = previsionRowsPerson.map((row) => row[metricKey]).filter((v): v is number => typeof v === "number").at(-1);
-      if (typeof latestReal !== "number" || typeof target !== "number") return;
+      const latestReal = getLatestMetricValue(realRowsPerson, metricKey);
+      const target = getLatestMetricValue(previsionRowsPerson, metricKey);
+      if (latestReal === null || target === null) return;
 
-      realByMetric.set(metricKey, latestReal);
-      previsionByMetric.set(metricKey, target);
       const reached = metric.lowerIsBetter ? latestReal <= target : latestReal >= target;
       if (reached) goalsReached += 1;
     });
@@ -197,28 +205,60 @@ export function getGroupKpis(data: CleanRow[]): GroupKpis {
   };
 }
 
+function buildPersonEvolutionSeriesFromRows(rows: CleanRow[]): Array<{ date: string; score: number }> {
+  const dates = Array.from(new Set(rows.map((row) => row.date))).sort((a, b) => a.localeCompare(b));
+  const scopedRows: CleanRow[] = [];
+  const series: Array<{ date: string; score: number }> = [];
+  let cursor = 0;
+
+  dates.forEach((date) => {
+    while (cursor < rows.length && rows[cursor].date <= date) {
+      scopedRows.push(rows[cursor]);
+      cursor += 1;
+    }
+
+    const score = calculateGlobalEvolutionScoreFromRows(scopedRows);
+    if (score !== null) {
+      series.push({ date, score });
+    }
+  });
+
+  return series;
+}
+
 export function buildGroupAverageSeries(data: CleanRow[]): Array<{ date: string; score: number }> {
   const realRows = getRealRows(data);
-  const people = Array.from(new Set(realRows.map((row) => row.personne)));
+  const realIndex = buildRowsIndex(data, "realisation");
 
   const dates = Array.from(new Set(realRows.map((row) => row.date))).sort((a, b) => a.localeCompare(b));
+  const personSeries = new Map<string, Array<{ date: string; score: number }>>();
+  const personCursor = new Map<string, number>();
+
+  realIndex.forEach((rows, person) => {
+    personSeries.set(person, buildPersonEvolutionSeriesFromRows(rows));
+    personCursor.set(person, 0);
+  });
+
   return dates.map((date) => {
-    const scoped = data.filter((row) => row.date <= date);
-    const scores = people.map((person) => calculateGlobalEvolutionScore(scoped, person)).filter((score) => !Number.isNaN(score));
+    const scores: number[] = [];
+
+    personSeries.forEach((series, person) => {
+      let idx = personCursor.get(person) ?? 0;
+      while (idx < series.length && series[idx].date <= date) {
+        idx += 1;
+      }
+      personCursor.set(person, idx);
+      if (idx > 0) scores.push(series[idx - 1].score);
+    });
+
     const score = scores.length ? scores.reduce((acc, s) => acc + s, 0) / scores.length : 0;
     return { date, score: Number(score.toFixed(1)) };
   });
 }
 
 export function buildPersonEvolutionSeries(data: CleanRow[], personne: string): Array<{ date: string; score: number }> {
-  const dates = Array.from(new Set(getRowsByPerson(data, personne).map((row) => row.date))).sort((a, b) => a.localeCompare(b));
-  return dates
-    .map((date) => {
-    const scoped = data.filter((row) => row.personne === personne && row.date <= date);
-    const score = calculateGlobalEvolutionScoreNullable(scoped, personne);
-    return score === null ? null : { date, score };
-  })
-    .filter((point): point is { date: string; score: number } => point !== null);
+  const rows = getRowsByPerson(data, personne);
+  return buildPersonEvolutionSeriesFromRows(rows);
 }
 
 export function calculatePersonalTotalVariation(data: CleanRow[], personne: string): number {
@@ -227,17 +267,14 @@ export function calculatePersonalTotalVariation(data: CleanRow[], personne: stri
   return Number((series[series.length - 1].score - series[0].score).toFixed(1));
 }
 
-export function calculatePersonalRecentVariation(data: CleanRow[], personne: string): number {
-  const series = buildPersonEvolutionSeries(data, personne);
-  if (series.length < 2) return 0;
-  return Number((series[series.length - 1].score - series[series.length - 2].score).toFixed(1));
-}
-
 export function listPersonSummaries(data: CleanRow[]): PersonEvolutionSummary[] {
-  const people = Array.from(new Set(getRealRows(data).map((row) => row.personne))).sort((a, b) => a.localeCompare(b));
+  const realIndex = buildRowsIndex(data, "realisation");
+  const people = Array.from(realIndex.keys()).sort((a, b) => a.localeCompare(b));
+
   return people.map((personne) => {
-    const score = calculateGlobalEvolutionScore(data, personne);
-    const recentMomentum = calculateRecentMomentum(data, personne);
+    const rows = realIndex.get(personne) ?? [];
+    const score = calculateGlobalEvolutionScoreFromRows(rows) ?? 0;
+    const recentMomentum = calculateRecentMomentumFromRows(rows);
     return {
       personne,
       score,
