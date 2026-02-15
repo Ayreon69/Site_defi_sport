@@ -74,6 +74,18 @@ export function DashboardClient({ rows, people }: Props) {
     [rows, selectedPerson, types, from, to]
   );
 
+  const personalAllTypes = useMemo(
+    () =>
+      filterRows({
+        rows,
+        people: selectedPerson ? [selectedPerson] : [],
+        types: ["realisation", "previsionnel"],
+        from: from || undefined,
+        to: to || undefined,
+      }),
+    [rows, selectedPerson, from, to]
+  );
+
   const personalRealScope = useMemo(
     () =>
       filterRows({
@@ -113,37 +125,43 @@ export function DashboardClient({ rows, people }: Props) {
   );
 
   const charts = useMemo(() => {
-    const groupedByDate = new Map<
-      string,
-      {
-        realisation: Partial<Record<MetricKey, number | null>>;
-        previsionnel: Partial<Record<MetricKey, number | null>>;
-      }
-    >();
+    const sortedDates = Array.from(new Set(personalAllTypes.map((row) => row.date))).sort((a, b) => a.localeCompare(b));
 
-    personalFiltered.forEach((row) => {
-      if (!groupedByDate.has(row.date)) {
-        groupedByDate.set(row.date, { realisation: {}, previsionnel: {} });
-      }
-      const bucket = groupedByDate.get(row.date);
-      if (!bucket) return;
+    const realRows = personalAllTypes.filter((row) => row.type === "realisation").sort((a, b) => a.date.localeCompare(b.date));
+    const previsionRows = personalAllTypes.filter((row) => row.type === "previsionnel").sort((a, b) => a.date.localeCompare(b.date));
+    const finalPrevisionRow = previsionRows.at(-1) ?? null;
 
-      METRICS.forEach((metric) => {
-        const value = toDisplayMetricValue(metric.key, row[metric.key] as number | null);
-        if (row.type === "realisation") bucket.realisation[metric.key] = value;
-        if (row.type === "previsionnel") bucket.previsionnel[metric.key] = value;
-      });
-    });
+    const interpolateForecast = (metricKey: MetricKey, date: string): number | null => {
+      if (!finalPrevisionRow) return null;
+      const endValue = toDisplayMetricValue(metricKey, finalPrevisionRow[metricKey] as number | null);
+      if (endValue === null) return null;
 
-    const sortedDates = Array.from(groupedByDate.keys()).sort((a, b) => a.localeCompare(b));
+      const firstRealRow = realRows.find((row) => typeof row[metricKey] === "number");
+      if (!firstRealRow) return null;
+      const startValue = toDisplayMetricValue(metricKey, firstRealRow[metricKey] as number | null);
+      if (startValue === null) return null;
+
+      const startTs = Date.parse(firstRealRow.date);
+      const endTs = Date.parse(finalPrevisionRow.date);
+      const currentTs = Date.parse(date);
+      if (Number.isNaN(startTs) || Number.isNaN(endTs) || Number.isNaN(currentTs)) return null;
+      if (endTs <= startTs) return currentTs === endTs ? endValue : null;
+      if (currentTs < startTs || currentTs > endTs) return null;
+
+      const t = (currentTs - startTs) / (endTs - startTs);
+      return Number((startValue + (endValue - startValue) * t).toFixed(3));
+    };
 
     return METRICS.map((metric) => {
       const sorted = sortedDates.map((date) => {
-        const bucket = groupedByDate.get(date);
+        const realRow = realRows.find((row) => row.date === date);
+        const realisation = realRow ? toDisplayMetricValue(metric.key, realRow[metric.key] as number | null) : null;
+        const previsionnel = interpolateForecast(metric.key, date);
+
         return {
           date,
-          realisation: bucket?.realisation[metric.key] ?? null,
-          previsionnel: bucket?.previsionnel[metric.key] ?? null,
+          realisation: types.includes("realisation") ? realisation : null,
+          previsionnel: types.includes("previsionnel") ? previsionnel : null,
         };
       });
 
@@ -154,7 +172,7 @@ export function DashboardClient({ rows, people }: Props) {
 
       return { metric, data: trimmedData };
     });
-  }, [personalFiltered]);
+  }, [personalAllTypes, types]);
 
   const toggleType = (type: DataType) => {
     setTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));

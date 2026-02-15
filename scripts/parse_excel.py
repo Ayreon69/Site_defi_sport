@@ -284,6 +284,32 @@ def drop_previsionnel_before_first_realisation(rows: list[CleanRow]) -> list[Cle
     return filtered
 
 
+def keep_only_final_previsionnel(rows: list[CleanRow]) -> list[CleanRow]:
+    filtered: list[CleanRow] = []
+    people = sorted({row.personne for row in rows})
+
+    for person in people:
+        person_rows = [row for row in rows if row.personne == person]
+        prevision_rows = sorted((row for row in person_rows if row.type == "previsionnel"), key=lambda r: r.date)
+        other_rows = [row for row in person_rows if row.type != "previsionnel"]
+
+        filtered.extend(other_rows)
+        if not prevision_rows:
+            continue
+
+        final_prevision = next(
+            (
+                row
+                for row in reversed(prevision_rows)
+                if any(getattr(row, metric) is not None for metric in METRIC_FIELDS)
+            ),
+            prevision_rows[-1],
+        )
+        filtered.append(final_prevision)
+
+    return filtered
+
+
 def write_outputs(rows: list[CleanRow], meta: list[PersonMeta], out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -344,8 +370,7 @@ def main() -> None:
         all_rows.extend(extract_sheet_rows(ws, sheet_name))
         people_meta.append(PersonMeta(personne=sheet_name, gage=extract_gage(ws)))
 
-    all_rows = drop_previsionnel_before_first_realisation(all_rows)
-    align_first_previsionnel_with_first_realisation(all_rows)
+    all_rows = keep_only_final_previsionnel(all_rows)
     all_rows.sort(key=lambda r: (r.personne.lower(), r.type, r.date))
     people_meta.sort(key=lambda p: p.personne.lower())
     write_outputs(all_rows, people_meta, Path("data"))
