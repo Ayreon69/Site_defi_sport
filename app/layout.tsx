@@ -13,14 +13,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="glass-nav fixed inset-x-0 top-0 z-50">
           <div className="container-shell flex h-16 items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Performance Suite</p>
-              <p className="font-display text-sm font-semibold text-ink">Sport Dashboard</p>
+            <div className="flex items-center gap-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-accent" />
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-muted">Performance Lab</p>
+                <p className="font-display text-sm font-semibold text-ink">Sport Chart Analytics</p>
+              </div>
             </div>
             <ThemeToggle />
           </div>
         </header>
-        <div className="pt-20">
+        <div className="pt-20 pb-8">
           {children}
         </div>
       </body>
