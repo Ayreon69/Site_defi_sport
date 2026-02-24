@@ -1,4 +1,4 @@
-﻿import type { CleanRow, MetricKey } from "@/lib/types";
+import type { CleanRow, MetricKey } from "@/lib/types";
 
 export type TrendPoint = { x: number; y: number };
 
@@ -49,3 +49,27 @@ export function badgeFromProgress(progress: number | null): string | null {
   if (progress >= 10) return "objectif atteint";
   return null;
 }
+
+/**
+ * Computes a linear trend for a series of dated values.
+ * Null values are excluded from the regression but all dates receive a trend point.
+ * Returns a Map from date string to trend value.
+ */
+export function computeTrendMap(items: Array<{ date: string; y: number | null }>): Map<string, number> {
+  const points = items
+    .map((item, index) => ({ x: index + 1, y: item.y }))
+    .filter((p): p is { x: number; y: number } => typeof p.y === "number");
+
+  if (points.length < 2) return new Map();
+
+  const trend = linearTrend(points);
+  if (!trend) return new Map();
+
+  const { slope, intercept } = trend;
+  const trendMap = new Map<string, number>();
+  items.forEach((item, idx) => {
+    trendMap.set(item.date, slope * (idx + 1) + intercept);
+  });
+  return trendMap;
+}
+

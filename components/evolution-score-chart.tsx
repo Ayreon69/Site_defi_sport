@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { computeTrendMap } from "@/lib/analytics";
 import { formatMonth } from "@/lib/utils";
 
 type Props = {
@@ -11,34 +12,27 @@ type Props = {
   lineColor?: string;
 };
 
-function computeTrend(data: Array<{ date: string; score: number }>) {
-  if (data.length < 2) return data.map((d) => ({ date: d.date, trend: null as number | null }));
-  const points = data.map((d, i) => ({ x: i + 1, y: d.score }));
-  const n = points.length;
-  const sumX = points.reduce((acc, p) => acc + p.x, 0);
-  const sumY = points.reduce((acc, p) => acc + p.y, 0);
-  const sumXY = points.reduce((acc, p) => acc + p.x * p.y, 0);
-  const sumXX = points.reduce((acc, p) => acc + p.x * p.x, 0);
-  const den = n * sumXX - sumX * sumX;
-  if (den === 0) return data.map((d) => ({ date: d.date, trend: null as number | null }));
-  const slope = (n * sumXY - sumX * sumY) / den;
-  const intercept = (sumY - slope * sumX) / n;
-  return data.map((d, i) => ({ date: d.date, trend: slope * (i + 1) + intercept }));
-}
-
 export function EvolutionScoreChart({ title, data, lineColor = "#0f766e" }: Props) {
   const chartData = useMemo(() => {
-    const trendByDate = new Map(computeTrend(data).map((x) => [x.date, x.trend]));
-    return data.map((d) => ({ ...d, trend: trendByDate.get(d.date) ?? null }));
+    const trendMap = computeTrendMap(data.map((d) => ({ date: d.date, y: d.score })));
+    return data.map((d) => ({ ...d, trend: trendMap.get(d.date) ?? null }));
   }, [data]);
 
   return (
-    <section className="premium-card section-fade">
+    <section
+      className="premium-card section-fade"
+      role="region"
+      aria-label={`Graphique d'évolution : ${title}`}
+    >
       <div className="mb-4 flex items-center justify-between">
         <h3 className="font-display text-xl font-semibold text-ink">{title}</h3>
         <span className="text-sm text-muted">score</span>
       </div>
-      <div className="h-64 w-full">
+      <div
+        className="h-64 w-full"
+        role="img"
+        aria-label={`Courbe du score d'évolution pour ${title}`}
+      >
         <ResponsiveContainer>
           <ComposedChart data={chartData}>
             <defs>

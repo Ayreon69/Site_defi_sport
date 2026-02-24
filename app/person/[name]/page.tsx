@@ -1,4 +1,5 @@
-﻿import Image from "next/image";
+import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -10,6 +11,14 @@ import { formatMetric, formatMonth, toDisplayMetricValue } from "@/lib/utils";
 export function generateStaticParams() {
   const people = getPeople(getAllRows());
   return people.map((name) => ({ name }));
+}
+
+export function generateMetadata({ params }: { params: { name: string } }): Metadata {
+  const name = decodeURIComponent(params.name);
+  return {
+    title: name,
+    description: `Fiche de performance et progression de ${name} : statistiques, records personnels et projections.`,
+  };
 }
 
 export default function PersonPage({ params }: { params: { name: string } }) {
