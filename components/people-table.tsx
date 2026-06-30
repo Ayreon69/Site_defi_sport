@@ -8,7 +8,7 @@ export function PeopleTable({ rows }: { rows: CleanRow[] }) {
 
   return (
     <section className="premium-card">
-      <h2 className="mb-1 font-display text-lg font-semibold text-ink">Athletes</h2>
+      <h2 className="mb-1 font-display text-lg font-semibold text-ink">Athlètes</h2>
       <p className="mb-4 text-xs text-muted">{people.length} profil{people.length !== 1 ? "s" : ""} disponible{people.length !== 1 ? "s" : ""}</p>
       <div className="divide-y divide-slate-100 dark:divide-white/10">
         {people.map((person) => (

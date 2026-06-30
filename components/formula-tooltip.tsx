@@ -8,7 +8,7 @@ type Props = {
 };
 
 const FORMULA_TEXT =
-  "Par metrique: quantite => ((dernier - premier) / |premier|) x 100. Temps (100m, 5km) => -((dernier - premier) / |premier|) x 100. Score evolution = moyenne des % de progression sur toutes les metriques.";
+  "Par métrique : quantité ⇒ ((dernier − premier) / |premier|) × 100. Temps (100m, 5km) ⇒ −((dernier − premier) / |premier|) × 100. Score évolution = moyenne des % de progression sur toutes les métriques.";
 
 export function FormulaTooltip({ title = "Formule de calcul" }: Props) {
   const tooltipId = useId();

@@ -153,7 +153,6 @@ function calculateRecentMomentumFromRows(rows: CleanRow[]): number {
 export function detectImprovementZone(data: CleanRow[], personne: string): string[] {
   const rows = getRowsByPerson(data, personne);
   const stats = listMetricStatsFromRows(rows)
-    .filter((stat) => stat.progressPct < 0)
     .sort((a, b) => a.progressPct - b.progressPct)
     .slice(0, 3);
 

@@ -33,7 +33,7 @@ export function DashboardClient({ rows, people }: Props) {
     personalRealScope,
   } = useDashboardFilters(rows);
 
-  const { groupKpis, groupAverageSeries, personSummaries } = useGroupMetrics(groupScopedAll);
+  const { groupKpis, groupAverageSeries, personSummaries, groupPredictionSummary } = useGroupMetrics(groupScopedAll);
 
   const {
     personalScore,
@@ -42,6 +42,7 @@ export function DashboardClient({ rows, people }: Props) {
     personalBadge,
     improvementZones,
     personalEvolutionSeries,
+    predictionSummary,
     charts,
   } = usePersonalMetrics(personalRealScope, personalAllTypes, selectedPerson, types);
 
@@ -53,9 +54,13 @@ export function DashboardClient({ rows, people }: Props) {
       <section className="mb-8 grid gap-4 md:grid-cols-5">
         <div className="premium-card relative overflow-hidden md:col-span-3">
           <Image
-            src="/images/abstrait-hero-background.jpeg"
+            src="/images/abstrait-hero-background.webp"
             alt="Fond abstrait hero"
             fill
+            priority
+            quality={60}
+            placeholder="blur"
+            blurDataURL="data:image/webp;base64,UklGRkYAAABXRUJQVlA4IDoAAADQAQCdASoQAAkABUB8JQAAT/wtk9SM4AD+4l2pbl9DFMWEK3rVb/0ONS/Bg+JMNBaewrsSG/R4HAAA"
             className="object-cover opacity-20"
             sizes="(max-width: 768px) 100vw, 60vw"
           />
@@ -63,14 +68,14 @@ export function DashboardClient({ rows, people }: Props) {
           <div className="relative z-10">
             <p className="text-xs uppercase tracking-[0.16em] text-muted">Tableau de pilotage sportif</p>
             <h1 className="mt-2 max-w-2xl font-display text-4xl font-semibold tracking-tighter text-ink md:text-5xl">
-              Lecture collective et individuelle des tendances de progression.
+              7 amis. 8 exercices. 1 an pour s&apos;améliorer.
             </h1>
             <p className="premium-subtitle mt-4 max-w-[65ch] text-sm md:text-base">
-              Basculer entre la vue groupe et la vue athlète pour suivre les performances, la dynamique recente et les zones prioritaires.
+              Chaque mois, on se teste sur les mêmes exercices. Les données sont analysées automatiquement : progression réelle, momentum, et prédiction du prochain cycle.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <span className="rounded-full border border-slate-200 bg-slate-50/95 px-3 py-1 text-xs text-slate-700">Filtres temporels</span>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50/95 px-3 py-1 text-xs text-emerald-700">Accent: progression</span>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50/95 px-3 py-1 text-xs text-emerald-700">91 sessions enregistrées</span>
+              <span className="rounded-full border border-slate-200 bg-slate-50/95 px-3 py-1 text-xs text-slate-700">Juin 2025 → Août 2026</span>
               <span className="rounded-full border border-slate-200 bg-slate-50/95 px-3 py-1 text-xs text-slate-700">
                 Mode {showPersonalView ? "personnel" : "collectif"}
               </span>
@@ -85,7 +90,7 @@ export function DashboardClient({ rows, people }: Props) {
           </div>
           <div className="mt-4 grid gap-3">
             <label className="text-sm">
-              <span className="mb-1.5 block text-muted">Athlete</span>
+              <span className="mb-1.5 block text-muted">Athlète</span>
               <select
                 value={selectedPerson}
                 onChange={(e) => setSelectedPerson(e.target.value)}
@@ -102,7 +107,7 @@ export function DashboardClient({ rows, people }: Props) {
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-sm">
-                <span className="mb-1.5 block text-muted">Debut</span>
+                <span className="mb-1.5 block text-muted">Début</span>
                 <input
                   type="date"
                   value={from}
@@ -132,7 +137,7 @@ export function DashboardClient({ rows, people }: Props) {
                     aria-pressed={types.includes("realisation")}
                     className={`btn-toggle ${types.includes("realisation") ? "btn-toggle-active" : "btn-toggle-inactive"}`}
                   >
-                    Realisation
+                    Réalisation
                   </button>
                   <button
                     type="button"
@@ -140,7 +145,7 @@ export function DashboardClient({ rows, people }: Props) {
                     aria-pressed={types.includes("previsionnel")}
                     className={`btn-toggle ${types.includes("previsionnel") ? "btn-toggle-active" : "btn-toggle-inactive"}`}
                   >
-                    Previsionnel
+                    Prévisionnel
                   </button>
                 </div>
               </div>
@@ -151,6 +156,27 @@ export function DashboardClient({ rows, people }: Props) {
             )}
           </div>
         </div>
+      </section>
+
+      <section className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[
+          { value: "+62%", label: "Progression moyenne groupe", sub: "sur toutes les métriques" },
+          { value: "100%", label: "Métriques en hausse", sub: "56 / 56 indicateurs" },
+          { value: "+119%", label: "Top exercice", sub: "Tractions supination" },
+          { value: "7", label: "Athlètes suivis", sub: "depuis juin 2025" },
+        ].map(({ value, label, sub }) => (
+          <motion.article
+            key={label}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="premium-card flex flex-col gap-1"
+          >
+            <p className="font-display text-3xl font-semibold text-accent">{value}</p>
+            <p className="text-sm font-medium text-ink">{label}</p>
+            <p className="text-xs text-muted">{sub}</p>
+          </motion.article>
+        ))}
       </section>
 
       <AnimatePresence mode="wait">
@@ -167,6 +193,7 @@ export function DashboardClient({ rows, people }: Props) {
               groupKpis={groupKpis}
               groupAverageSeries={groupAverageSeries}
               personSummaries={personSummaries}
+              groupPredictionSummary={groupPredictionSummary}
               hasGroupData={hasGroupData}
             />
           </motion.section>
@@ -188,6 +215,7 @@ export function DashboardClient({ rows, people }: Props) {
               personalBadge={personalBadge}
               improvementZones={improvementZones}
               personalEvolutionSeries={personalEvolutionSeries}
+              predictionSummary={predictionSummary}
               charts={charts}
               personalRealScope={personalRealScope}
               hasPersonalData={hasPersonalData}
