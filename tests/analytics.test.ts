@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { progressionPct, projectNextValue, computeTrendMap, linearTrend } from "../lib/analytics.ts";
+import { progressionPct, projectNextValue, computeTrendMap, getTrendGuardrails, linearTrend } from "../lib/analytics.ts";
+import { buildGroupPredictionSummary, buildPersonPredictionSummary } from "../lib/predictions.ts";
 import type { CleanRow } from "../lib/types";
 
 function makeRow(date: string, dips: number | null): CleanRow {
@@ -9,6 +10,22 @@ function makeRow(date: string, dips: number | null): CleanRow {
     personne: "Tester",
     date,
     type: "realisation",
+    dips,
+    pompes: null,
+    traction_pro: null,
+    traction_sup: null,
+    planche_sec: null,
+    superman_sec: null,
+    sprint_100m_sec: null,
+    run_5km_sec: null,
+  };
+}
+
+function makePredictiveRow(date: string, type: CleanRow["type"], dips: number): CleanRow {
+  return {
+    personne: "Tester",
+    date,
+    type,
     dips,
     pompes: null,
     traction_pro: null,
@@ -110,4 +127,46 @@ test("computeTrendMap sets trend for all dates including null-value ones", () =>
   assert.ok(map.has("2025-01-01"));
   assert.ok(map.has("2025-02-01"));
   assert.ok(map.has("2025-03-01"));
+});
+
+test("computeTrendMap applies physiological guardrails for 5km extrapolation", () => {
+  const items = [
+    { date: "2025-06-01", y: 29 },
+    { date: "2025-08-01", y: 20 + 52 / 60 },
+    { date: "2026-01-01", y: null },
+  ];
+
+  const map = computeTrendMap(items, getTrendGuardrails("run_5km_sec"));
+  const projected = map.get("2026-01-01");
+  assert.ok(typeof projected === "number");
+  assert.ok(projected >= 18);
+});
+
+test("buildPersonPredictionSummary projects next cycle and classifies goal trajectory", () => {
+  const rows = [
+    makePredictiveRow("2025-01-01", "realisation", 10),
+    makePredictiveRow("2025-02-01", "realisation", 15),
+    makePredictiveRow("2025-03-01", "realisation", 20),
+    makePredictiveRow("2025-04-01", "previsionnel", 25),
+  ];
+
+  const summary = buildPersonPredictionSummary(rows, "Tester");
+  assert.equal(summary.predictions.length, 1);
+  assert.equal(summary.predictions[0].predictedNextValue, 25);
+  assert.equal(summary.predictions[0].risk, "on_track");
+  assert.equal(summary.onTrackCount, 1);
+});
+
+test("buildGroupPredictionSummary aggregates model confidence and risks", () => {
+  const rows = [
+    makePredictiveRow("2025-01-01", "realisation", 10),
+    makePredictiveRow("2025-02-01", "realisation", 12),
+    makePredictiveRow("2025-03-01", "realisation", 13),
+    makePredictiveRow("2025-04-01", "previsionnel", 30),
+  ];
+
+  const summary = buildGroupPredictionSummary(rows);
+  assert.equal(summary.profilesAnalyzed, 1);
+  assert.ok(summary.averageConfidence > 0);
+  assert.ok(summary.atRiskCount >= 0);
 });

@@ -13,25 +13,28 @@ import {
   YAxis,
 } from "recharts";
 
-import { computeTrendMap } from "@/lib/analytics";
+import { computeTrendMap, getTrendGuardrails } from "@/lib/analytics";
+import type { MetricKey } from "@/lib/types";
 import { formatMetric, formatMonth } from "@/lib/utils";
 
 type Props = {
   title: string;
+  metricKey: MetricKey;
   data: Array<{ date: string; realisation: number | null; previsionnel: number | null }>;
   unit: string;
 };
 
-export function MetricChart({ title, data, unit }: Props) {
+export function MetricChart({ title, metricKey, data, unit }: Props) {
   const chartData = useMemo(() => {
     const trendByDate = computeTrendMap(
-      data.map((item) => ({ date: item.date, y: item.realisation }))
+      data.map((item) => ({ date: item.date, y: item.realisation })),
+      getTrendGuardrails(metricKey)
     );
     return data.map((item) => ({
       ...item,
       trend: trendByDate.get(item.date) ?? null,
     }));
-  }, [data]);
+  }, [data, metricKey]);
 
   return (
     <section

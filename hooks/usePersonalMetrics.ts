@@ -10,6 +10,7 @@ import {
   detectImprovementZone,
   getPersonBadge,
 } from "@/lib/evolutionStats";
+import { buildPersonPredictionSummary } from "@/lib/predictions";
 import { METRICS, type CleanRow, type DataType, type MetricKey } from "@/lib/types";
 import { toDisplayMetricValue } from "@/lib/utils";
 
@@ -72,6 +73,11 @@ export function usePersonalMetrics(
     [personalRealScope, selectedPerson]
   );
 
+  const predictionSummary = useMemo(
+    () => (selectedPerson ? buildPersonPredictionSummary(personalAllTypes, selectedPerson) : null),
+    [personalAllTypes, selectedPerson]
+  );
+
   const charts = useMemo(() => {
     const sortedDates = Array.from(new Set(personalAllTypes.map((row) => row.date))).sort((a, b) =>
       a.localeCompare(b)
@@ -120,6 +126,7 @@ export function usePersonalMetrics(
     personalBadge,
     improvementZones,
     personalEvolutionSeries,
+    predictionSummary,
     charts,
   };
 }
